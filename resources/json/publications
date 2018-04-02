@@ -1,0 +1,134 @@
+[
+    {
+    "Author":   "C. Davis, M. Nagel, P. Orson and M. Powell",
+    "Title":    "Triple linking numbers and surface systems",
+    "Date":     "2017",
+    "Arxiv":    "1709.08478"
+    },
+
+	{
+	"Author":	"C. Davis, M. Nagel, J. Park and A. Ray",
+	"Title":	"Concordance of knots in S1xS2",
+	"Date":		"2017",
+	"Arxiv":	"1707.04542",
+  "Note": "accepted in J. Lond. Math. Soc."
+	},
+
+	{
+	"Author":	"M. Nagel, P. Orson, J. Park and M. Powell",
+	"Title":	"Smooth and topological almost concordance",
+	"Date":		"2017",
+	"Arxiv":	"1707.01147",
+  "Note": "accepted in Int. Math. Res. Notices."
+	},
+
+    {
+	"Author":	"A. Conway, M. Nagel and E. Toffoli",
+	"Title":	"Multivariable signatures, genus bounds and 1-solvable cobordisms",
+	"Date":		"2017",
+	"Arxiv":	"1703.07540"
+	},
+
+	{
+	"Author":	"S. Friedl, M. Nagel, P. Orson and M. Powell",
+	"Title":	"Satellites and concordance of knots in 3-manifolds",
+	"Date":		"2016",
+	"Arxiv":	"1611.09114",
+  "Note": "accepted in Trans. Amer. Math. Soc."
+	},
+
+	{
+	"Author":	"M. Nagel and M. Powell",
+	"Title":	"Concordance invariance of Levine-Tristram signatures of links",
+	"Date":		"2016",
+    "Journal":	{
+				"Name": "Doc. Math.",
+				"Volume": "22(2017): 25-43"
+			},
+	"Arxiv":	"1608.02037"
+	},
+
+	{
+	"Author":	"H. Boden and M. Nagel",
+	"Title":	"Concordance group of virtual knots",
+	"Date":		"2016",
+  "Journal":	{
+      "Name": "Proc. Amer. Math. Soc.",
+      "Volume": "145.12(2017): 5451-5461"
+    },
+	"Arxiv":	"1606.06404"
+	},
+
+	{
+	"Author":	"S. Friedl, T. Kitayama and M. Nagel",
+	"Title":	"Representation varieties detect essential surfaces",
+	"Date":		"2016",
+	"Arxiv":	"1604.00584",
+  "Note": "accepted in Math. Res. Lett."
+	},
+
+	{
+	"Author": 	"S. Friedl, C. Leidy, M. Nagel and M. Powell",
+	"Title":	"Twisted Blanchfield pairings and decompositions of 3-manifolds",
+	"Date":		"2016",
+	"Arxiv":	"1602.00140",
+  "Note": "accepted in Homology, Homotopy and Applications"
+	},
+
+	{
+	"Author":	"S. Friedl, T. Kitayama and M. Nagel",
+	"Title":	"A note on the existence of essential tribranched surfaces",
+    "Journal":	{
+				"Name": "Topology Appl.",
+				"Volume": "225(2017): 75-82"
+			},
+	"Date":		"2015",
+	"Arxiv":	"1505.01806"
+	},
+	{
+	"Author":	"S. Friedl and M. Nagel",
+	"Title":	"Twisted Reidemeister torsion and the Thurston norm: graph manifolds and finite representations",
+	"Arxiv":	"1503.07251",
+	"Journal":	{
+				"Name": "Illinois J. Math.",
+				"Volume": "59(3): 691-705"
+			},
+	"Date":		"2015"
+	},
+
+	{
+	"Author":	"M. Nagel and B. Owens",
+	"Title":	"Unlinking information from 4-manifolds",
+	"Arxiv":	"1503.03092",
+	"Date":		"2015",
+	"Journal":	{ "Name": 	"Bull. London Math. Soc.",
+			  "Volume":	"47 (6): 964-979"}
+	},
+
+	{
+	"Author":	"S. Friedl and M. Nagel",
+	"Title":	"3-manifolds that can be made acyclic",
+	"Arxiv":	"1412.4280",
+	"Journal":	{ "Name":  	"Int. Math. Res. Notices",
+			  "Volume":	"24: 13360-13378"},
+	"Date":		"2014"
+	},
+
+	{
+	"Author":	"M. Nagel",
+	"Title":	"Minimal genus in circle bundles over 3-manifolds",
+	"Arxiv":	"1410.4018",
+	"Date":		"2014",
+	"Journal":	{ "Name": 	"Journal of Topology",
+			  "Volume":	"(2016) 9 (3): 747-773"}
+	},
+
+	{
+	"Author" :	"S. Friedl, M. Nagel and M. Powell",
+	"Title"  :	"A specious unlinking strategy",
+	"Journal":	{ "Name" : "Periodica Mathematica Hungarica",
+			  "Volume"  :	"69(2):207-210"},
+	"Date"   :		"2014",
+	"Arxiv"  :	"1410.2052"
+	}
+]
