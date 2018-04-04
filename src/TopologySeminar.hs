@@ -39,8 +39,8 @@ erikTalk18 = Talk (day 2018 03 22)
 
 yulanTalk18 = Talk (day 2018 04 05)
     <| speaker "Yulan Qing" "University of Toronto"
-    <| Nothing
-    <| Nothing
+    <| title "Loops with large twist get short along quasi-geodesics in $Out(Fn)$"
+    <| abstract "We start with the basic of geometric group theory, that is, using geometric objects to understand word problems. The group of interest is $Out(Fn)$. Given an element $\\phi$ in $Out(Fn)$, we discuss what is the \"generalized intersection number\" associated with this element. There are several natural paths connecting the origin to $\\phi$ in $Out(Fn)$, for example, a path associate to sequence of Stalling folds and paths induced by the shadow of standard geodesics in Outer space. We use the intersection number to show that neither of these paths is, in general, a quasi-geodesic in $Out(Fn)$."
 
 changliangTalk18 = Talk (day 2018 02 01)
     <| speaker "王常亮" "McMaster University"
