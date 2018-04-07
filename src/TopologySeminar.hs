@@ -8,26 +8,17 @@ import Data.Time.Calendar
 import Utils
 import Utility.Seminars
 
-readingWeekWS17 = Announcement (day 2017 10 12)
-  "There is no seminar during the reading week."
-
-readingWeekSS18 = Announcement (day 2018 02 22)
-    "There is no seminar during the reading week."
-
-topolologyFieldsSS18 = Announcement (day 2018 03 15)
-    "Canadian Geometry and Topology seminar at Fields"
-
 yeorgosTalk18 = Talk (day 2018 03 29)
   <| speaker "Andreas Arvanitoyeorgos" "University of Patras"
   <| title "Homogeneous geodesics and two-step homogeneous geodesics in homogeneous spaces"
   <| abstract "A homogeneous Riemannian manifold $(M = G/K, g)$  is called a space with homogeneous geodesics or a $G$-g.o. space if every geodesic of $M$ is an orbit of a one-parameter subgroup of $G.$ In the present talk I will  present some recent results on g.o. manifolds based on joint works with Yu Wang, G. Zhao.  I will also introduce the concept of a two-step homogeneous geodesic, based on joint work with N.P Souris and extension to pseudo-Riemannian case."
 
-ritaTalk18 = Talk (day 2018 04 27)
+ritaTalk18 = Talk (dayInfo 2018 04 27 "Friday 11:15")
   <| speaker "Rita Gitik" "University of Michigan"
   <| title "A new algorithm in group theory"
   <| abstract "We describe a new algorithm which determines if the intersection of a quasiconvex subgroup of a negatively curved group with any of its conjugates is infinite. The algorithm is based on the concepts of a coset graph and a weakly Nielsen generating set of a subgroup. We also give a new proof of decidability of a membership problem for quasiconvex subgroups of negatively curved groups."
 
-elisaTalk18 = Talk (day 2018 04 13)
+elisaTalk18 = Talk (dayInfo 2018 04 13 "Friday 11:15")
   <| speaker "Elise Villella" "University of Pittsburgh"
   <| title "Virtual Gelfand-Zetlin polytopes"
   <| abstract "Gelfand-Zetlin polytopes are an important family of convex polytopes that appear in representation theory. I will define and describe the so-called virtual Gelfand-Zetlin polytopes associated to non-dominant weights. We will discuss connection between geometry of the flag variety and a certain toric variety related to Gelfand-Zetlin polytopes."
@@ -236,10 +227,11 @@ topSemPage dd = page "Geometry & Topology Seminar" $ do
         topSemContent dd
 
 talks :: [Talk]
-talks = [ yeorgosTalk18,
+talks = sortTalks [
           yulanTalk18,
-          elisaTalk18,
           ritaTalk18,
+          elisaTalk18,
+          yeorgosTalk18,
           erikTalk18,
           naylorTalk,
           tiozzoTalk18,
@@ -260,7 +252,7 @@ talks = [ yeorgosTalk18,
           kunduriTalk,
           steveTalk ]
 
-pastTalks dd = filter ( before dd ) talks
+pastTalks dd = reverse $ filter ( before dd ) talks
 
 futureTalks dd = filter ( not . before dd ) talks
 

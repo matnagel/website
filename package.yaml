@@ -6,10 +6,6 @@ author:              "Matthias nagel"
 maintainer:          "nagel@cirget.ca"
 copyright:           "2018 Matthias Nagel"
 
-extra-source-files:
-- README.md
-- LICENSE
-
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
 # category:            Web
