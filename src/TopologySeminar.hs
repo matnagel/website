@@ -13,7 +13,7 @@ yeorgosTalk18 = Talk (day 2018 03 29)
   <| title "Homogeneous geodesics and two-step homogeneous geodesics in homogeneous spaces"
   <| abstract "A homogeneous Riemannian manifold $(M = G/K, g)$  is called a space with homogeneous geodesics or a $G$-g.o. space if every geodesic of $M$ is an orbit of a one-parameter subgroup of $G.$ In the present talk I will  present some recent results on g.o. manifolds based on joint works with Yu Wang, G. Zhao.  I will also introduce the concept of a two-step homogeneous geodesic, based on joint work with N.P Souris and extension to pseudo-Riemannian case."
 
-ritaTalk18 = Talk (dayInfo 2018 04 27 "Friday 11:15")
+ritaTalk18 = Talk (dayInfo 2018 04 27 "Friday 15:30")
   <| speaker "Rita Gitik" "University of Michigan"
   <| title "A new algorithm in group theory"
   <| abstract "We describe a new algorithm which determines if the intersection of a quasiconvex subgroup of a negatively curved group with any of its conjugates is infinite. The algorithm is based on the concepts of a coset graph and a weakly Nielsen generating set of a subgroup. We also give a new proof of decidability of a membership problem for quasiconvex subgroups of negatively curved groups."
