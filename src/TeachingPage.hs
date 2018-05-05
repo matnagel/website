@@ -39,10 +39,13 @@ bulbSeminar = do
     rightPicture bulbDescription
       "./images/bulb.jpg" "A light bulb" "bulb"
 
+swSeminarDescription = do
+  p "We study the approach to Seiberg-Witten theory of Bauer-Furuta using stable homotopy theory."
+  p $ link "http://www.patrickorson.com/SWstable/" "Seminar page"
+
 swSeminar = do
     headline "UQAM / SW stable homotopy theory"
-    p "We study the approach to Seiberg-Witten theory of Bauer-Furuta using stable homotopy theory."
-    p $ link "http://www.patrickorson.com/SWstable/" "Seminar page"
+    rightPicture swSeminarDescription "./images/vectorfield.jpg" "Flow of a vectorfield" "vectorfield"
 
 mcLinAlg = do
     headline "McGill / Math 123"

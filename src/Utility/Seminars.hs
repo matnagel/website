@@ -37,8 +37,9 @@ type University = Html
 type Name = Html
 type Title = Html
 type Abstract = Html
+type Information = Html
 
-data Time = Time Day (Maybe Html)
+data Time = Time Day (Maybe Information)
 
 data Talk = Talk Time Speaker (Maybe Title) (Maybe Abstract)
   | Announcement Time Html
