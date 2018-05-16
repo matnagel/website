@@ -8,6 +8,11 @@ import Data.Time.Calendar
 import Utils
 import Utility.Seminars
 
+drellichTalk18 = Talk (day 2018 10 18)
+    <| speaker "Elizabeth Drellich" "Swarthmore College"
+    <| Nothing
+    <| Nothing
+
 yeorgosTalk18 = Talk (day 2018 03 29)
   <| speaker "Andreas Arvanitoyeorgos" "University of Patras"
   <| title "Homogeneous geodesics and two-step homogeneous geodesics in homogeneous spaces"
@@ -228,6 +233,7 @@ topSemPage dd = page "Geometry & Topology Seminar" $ do
 
 talks :: [Talk]
 talks = sortTalks [
+      drellichTalk18,
           yulanTalk18,
           ritaTalk18,
           elisaTalk18,
