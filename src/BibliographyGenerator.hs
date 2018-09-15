@@ -47,7 +47,7 @@ instance FromJSON Publication where
                    <*>  v .:? "Arxiv"
                    <*>  v .:  "Title"
                    <*>  v .:  "Date"
-                   <*>  v .:?  "Note"
+                   <*>  v .:? "Note"
     parseJSON _ = mzero
 
 instance FromJSON Arxiv where
