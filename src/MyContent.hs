@@ -5,14 +5,14 @@ indexPage,
 teachingPage,
 publicationPage,
 algTopPage,
-linksPage,
+miscPage,
 topSemPage
 ) where
 
 import BibliographyGenerator
 import AlgTopPage (algTopPage)
 import TopologySeminar (topSemPage)
-import LinksPage (linksPage)
+import MiscPage (miscPage)
 import TeachingPage
 import Utils
 

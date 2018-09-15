@@ -18,4 +18,4 @@ main = do
     writeFile "output/publications.html" $ renderHtml $ publicationPage bib
     writeFile "output/algtop.html" $ renderHtml $ algTopPage
     writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
-    writeFile "output/links.html" $ renderHtml $ linksPage
+    writeFile "output/misc.html" $ renderHtml $ miscPage

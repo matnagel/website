@@ -83,4 +83,4 @@ menuBlock = do
             divId "navigation" $ do
                 link "./teaching.html" $ "Teaching"
                 link "./publications.html" $ "Publications"
-                link "./links.html" $ "Links"
+                link "./misc.html" $ "Misc"
