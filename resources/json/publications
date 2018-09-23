@@ -29,6 +29,7 @@
 	"Author":	"A. Conway, M. Nagel and E. Toffoli",
 	"Title":	"Multivariable signatures, genus bounds and 0.5-solvable cobordisms",
 	"Date":		"2018",
+	"Note": "accepted in Mich. Math. J.",
 	"Arxiv":	"1703.07540"
 	},
 
@@ -128,14 +129,14 @@
 	"Title":	"Minimal genus in circle bundles over 3-manifolds",
 	"Arxiv":	"1410.4018",
 	"Date":		"2014",
-	"Journal":	{ "Name": 	"Journal of Topology",
+	"Journal":	{ "Name": 	"J. Topol.",
 			  "Volume":	"9.3 (2016): 747-773"}
 	},
 
 	{
 	"Author" :	"S. Friedl, M. Nagel and M. Powell",
 	"Title"  :	"A specious unlinking strategy",
-	"Journal":	{ "Name" : "Periodica Mathematica Hungarica",
+	"Journal":	{ "Name" : "Period. Math. Hung.",
 			  "Volume"  :	"69.2:207-210"},
 	"Date"   :	"2014",
 	"Arxiv"  :	"1410.2052"
