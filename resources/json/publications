@@ -1,5 +1,12 @@
 [
     {
+    "Author":   "A. Conway and M. Nagel",
+    "Title":    "Stably slice disks of links",
+    "Date":     "2019",
+    "Arxiv":    "1901.01393"
+    },
+
+    {
     "Author":   "C. Davis, M. Nagel, P. Orson and M. Powell",
     "Title":    "Triple linking numbers and surface systems",
     "Date":     "2017",
