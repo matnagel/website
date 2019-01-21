@@ -31,7 +31,7 @@ instance FromJSON Journal where
     parseJSON _ = mzero
 
 data Publication = Pub {
-                author::String,
+                coauthors::Maybe [String],
                 journal::Maybe Journal,
                 arxiv::Maybe Arxiv,
                 title::String,
@@ -42,7 +42,7 @@ data Publication = Pub {
 
 instance FromJSON Publication where
     parseJSON (Object v) = Pub
-                   <$>  v .:  "Author"
+                   <$>  v .:?  "Coauthors"
                    <*>  v .:? "Journal"
                    <*>  v .:? "Arxiv"
                    <*>  v .:  "Title"
@@ -58,12 +58,15 @@ renderArxiv (Arxiv str) =  link url str
                 where url = "https://arxiv.org/abs/" <> str
 
 renderTitle = em . toHtml
-renderAuthor = toHtml
+
+renderCoauthor :: [String] -> Html
+renderCoauthor xs = "with " <> coAuthorList
+       where coAuthorList = flatten $ (\x -> separatedEntry (toHtml x) ", ") <$> xs 
 
 renderPublication :: Publication -> Html
 renderPublication pub = divClass "publication"
-  $ flatten [sAuthor, sTitle, sJournal, sArxiv, sDate, sNote]
-  where sAuthor = separatedEntry (renderAuthor $ author pub) br
+  $ flatten [sTitle, sCoauthor, sJournal, sArxiv, sDate, sNote]
+  where sCoauthor = separatedEntryMaybe (renderCoauthor <$> coauthors pub) br
         sTitle = separatedEntry (renderTitle $ title pub) br
         sJournal = separatedEntryMaybe (renderJournal <$> journal pub) ", "
         sArxiv = separatedEntryMaybe (renderArxiv <$> arxiv pub) ", "

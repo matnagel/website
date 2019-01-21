@@ -11,7 +11,7 @@ import Data.Time.Clock
 main :: IO ()
 main = do
     setLocaleEncoding utf8
-    bib <- readFile "resources/json/publications"
+    bib <- readFile "resources/json/publications.json"
     time <- getCurrentTime
     writeFile "output/index.html" $ renderHtml $ indexPage
     writeFile "output/teaching.html" $ renderHtml $ teachingPage
