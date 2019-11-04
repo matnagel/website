@@ -11,7 +11,7 @@ miscPage = page "Miscellaneous" $ do
         menuBlock
         pageTitle "Miscellaneous"
         headline "Seminars"
-        link "https://www.maths.ox.ac.uk/events/list/all" "Seminars at Oxford"
+        link "https://math.ethz.ch/news-and-events/events/research-seminars.html" "Seminars at ETH"
         headline "GDPR"
         p gdprNotice
 
