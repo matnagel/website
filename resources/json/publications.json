@@ -1,5 +1,12 @@
 [
     {
+    "Coauthors":   ["S. Friedl", "P. Orson", "M. Powell"],
+    "Title":    "A survey of the foundations of four-manifold theory in the topological category",
+    "Date":     "2019",
+    "Arxiv":    "1910.07372"
+    },
+
+    {
     "Coauthors":   ["A. Conway"],
     "Title":    "Stably slice disks of links",
     "Date":     "2019",

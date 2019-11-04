@@ -37,9 +37,15 @@ researchBlock = do
             p "My field of study is geometric topology. I am interested in concordance of links, and surfaces of minimal genus in 3- and 4-manifolds."
             p "One of my favourite tools for studying these questions is the signature and twisted Reidemeister torsion."
 
-oxaddress = pre "matthias.nagel (at) math.ethz.ch\n\n\
+ethaddress = pre "matthias.nagel (at) math.ethz.ch\n\n\
         \Department of Mathematics\n\
         \ETH Zurich, Switzerland"
 
+aboutField = do
+		ethaddress
+		p ( do 
+			"I am on the job market. Here is a " 
+			link "https://people.math.ethz.ch/~managel/nagelCV.pdf" "CV" )
+
 aboutmeBlock :: Html
-aboutmeBlock = rightPicture (oxaddress) "./images/myself2.jpg" "Photo of myself" "myphoto"
+aboutmeBlock = rightPicture (aboutField) "./images/myself2.jpg" "Photo of myself" "myphoto"
