@@ -17,8 +17,8 @@ import TeachingPage
 import Utils
 
 publicationPage bib = page "Publications" $ do
+	menuBlock
 	pageTitle "Publications"
-        menuBlock
         generateBibliography bib
 
 indexPage :: Html
