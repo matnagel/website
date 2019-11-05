@@ -17,6 +17,7 @@ import TeachingPage
 import Utils
 
 publicationPage bib = page "Publications" $ do
+	pageTitle "Publications"
         menuBlock
         generateBibliography bib
 
