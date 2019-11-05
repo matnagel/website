@@ -18,7 +18,6 @@ import Utils
 
 publicationPage bib = page "Publications" $ do
         menuBlock
-        pageTitle "Publications"
         generateBibliography bib
 
 indexPage :: Html
