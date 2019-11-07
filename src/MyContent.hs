@@ -45,7 +45,8 @@ aboutField = do
 		ethaddress
 		p ( do 
 			"I am on the job market. Here is a " 
-			link "https://people.math.ethz.ch/~managel/nagelCV.pdf" "CV" )
+			link (storageETH "nagelCV.pdf") "CV"
+			"." )
 
 aboutmeBlock :: Html
-aboutmeBlock = rightPicture (aboutField) "./images/myself2.jpg" "Photo of myself" "myphoto"
+aboutmeBlock = rightPicture (aboutField) (storageETH "images/myself2.jpg") "Photo of myself" "myphoto"

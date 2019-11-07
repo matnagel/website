@@ -13,7 +13,7 @@ mac18Instanton = do
 
 macMCZ = do
     headline "McMaster / Math 1ZC3"
-    rightPicture desc "./images/matrix.jpg" "A magic matrix" "matrix"
+    rightPicture desc (storageETH "images/matrix.jpg") "A magic matrix" "matrix"
       where desc = do
               p $ "Introduction to linear algebra for engineers. We cover linear independence, dimension, determinants, eigenvalues, diagonalisation, and complex numbers."
               p $ link "https://www.childsmath.ca/childsa/forms/main_login.php" "Course page"
@@ -37,7 +37,7 @@ bulbDescription = do
 bulbSeminar = do
     headline "McMaster / Light bulbs in dimension 3 and 4"
     rightPicture bulbDescription
-      "./images/bulb.jpg" "A light bulb" "bulb"
+      (storageETH "images/bulb.jpg") "A light bulb" "bulb"
 
 swSeminarDescription = do
   p "We study the approach to Seiberg-Witten theory of Bauer-Furuta using stable homotopy theory."
@@ -45,7 +45,7 @@ swSeminarDescription = do
 
 swSeminar = do
     headline "UQAM / SW stable homotopy theory"
-    rightPicture swSeminarDescription "./images/vectorfield.jpg" "Flow of a vectorfield" "vectorfield"
+    rightPicture swSeminarDescription (storageETH "images/vectorfield.jpg") "Flow of a vectorfield" "vectorfield"
 
 mcLinAlg = do
     headline "McGill / Math 123"
@@ -60,15 +60,15 @@ mcCplx = do
     \in the complex plane and the computation of various transforms and their application \
     \in engineering."
     p $ do
-        link "./pdf/Math381/Homework1.pdf" "Homework1"
+        link (storageETH "pdf/math381/Homework1.pdf") "Homework1"
         " "
-        link "./pdf/Math381/Homework2.pdf" "Homework2"
+        link (storageETH "pdf/math381/Homework2.pdf") "Homework2"
         " "
-        link "./pdf/Math381/Homework3.pdf" "Homework3"
+        link (storageETH "pdf/math381/Homework3.pdf") "Homework3"
         " "
-        link "./pdf/Math381/Homework4.pdf" "Homework4"
+        link (storageETH "pdf/math381/Homework4.pdf") "Homework4"
         " "
-        link "./pdf/Math381/Homework5.pdf" "Homework5"
+        link (storageETH "pdf/math381/Homework5.pdf") "Homework5"
 
 teachingPage :: Html
 teachingPage = page "Teaching" $ do

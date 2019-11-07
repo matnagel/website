@@ -19,12 +19,12 @@ desItem desc cont = do
     cont
 
 algTopContent = do
-  image "./images/covering.jpg" "A cover of the circle" "covering"
+  image (storageETH "images/covering.jpg") "A cover of the circle" "covering"
   desItem "Final exam" $ finalexam
   desItem "Homework" $ homeworkList
   desItem "Instructor" instructorItem
   desItem "Course outline" $ do
-    link "./pdf/Math731/Outline.pdf" "Course outline"
+    link (storageETH "pdf/math731/Outline.pdf") "Course outline"
   desItem "Lecture" $ do
     "Tuesdays and Fridays, 9:30 - 11:00"
     br
@@ -35,12 +35,12 @@ algTopContent = do
   desItem "Textbook" booksItem
 
 homeworkList = ul $ do
-    li $ homework "./pdf/Math731/Homework6.pdf" "Homework 6" "December 5"
-    li $ homework "./pdf/Math731/Homework5.pdf" "Homework 5" "November 28"
-    li $ homework "./pdf/Math731/Homework4.pdf" "Homework 4" "November 17"
-    li $ homework "./pdf/Math731/Homework3.pdf" "Homework 3" "October 27"
-    li $ homework "./pdf/Math731/Homework2.pdf" "Homework 2" "October 6"
-    li $ homework "./pdf/Math731/Homework1.pdf" "Homework 1" "September 22"
+    li $ homework (storageETH "pdf/math731/Homework6.pdf") "Homework 6" "December 5"
+    li $ homework (storageETH "pdf/math731/Homework5.pdf") "Homework 5" "November 28"
+    li $ homework (storageETH "pdf/math731/Homework4.pdf") "Homework 4" "November 17"
+    li $ homework (storageETH "pdf/math731/Homework3.pdf") "Homework 3" "October 27"
+    li $ homework (storageETH "pdf/math731/Homework2.pdf") "Homework 2" "October 6"
+    li $ homework (storageETH "pdf/math731/Homework1.pdf") "Homework 1" "September 22"
 
 instructorItem = do
     "Matthias Nagel"
@@ -51,7 +51,7 @@ instructorItem = do
 
 finalexam = do
   p $ "The final exam is a take-home exam. It will be distributed Wednesday, December 6 - 10:00 at my office M414 and is due on Friday, December 8 - 10:00. It has to be returned to me before the deadline passes at M414."
-  p $ link "./pdf/Math731/Finalexam.pdf" "Final exam"
+  p $ link (storageETH "pdf/math731/Finalexam.pdf") "Final exam"
 
 booksItem = ul $ do
     li $ do

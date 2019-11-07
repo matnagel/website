@@ -18,6 +18,7 @@ p,
 em,
 pre,
 toHtml,
+storageETH,
 divClass
 ) where
 
@@ -84,3 +85,5 @@ menuBlock = do
                 link "./teaching.html" $ "Teaching"
                 link "./publications.html" $ "Publications"
                 link "./misc.html" $ "Misc"
+
+storageETH x = fromString $ "https://people.math.ethz.ch/~managel/website/" ++ x
