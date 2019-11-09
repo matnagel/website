@@ -9,6 +9,7 @@ miscPage,
 topSemPage
 ) where
 
+import Prelude hiding (div)
 import BibliographyGenerator
 import AlgTopPage (algTopPage)
 import TopologySeminar (topSemPage)
@@ -41,12 +42,15 @@ ethaddress = pre "matthias.nagel (at) math.ethz.ch\n\n\
         \Department of Mathematics\n\
         \ETH Zurich, Switzerland"
 
-aboutField = do
-		ethaddress
-		p ( do 
+jobmarket = p ( do 
 			"I am on the job market. Here is a " 
 			link (storageETH "nagelCV.pdf") "CV"
 			"." )
 
+aboutmeContent = flex ! style "flex-direction:column" $ do
+        ethaddress 
+        jobmarket
+
 aboutmeBlock :: Html
-aboutmeBlock = rightPicture (aboutField) (storageETH "images/myself2.jpg") "Photo of myself" "myphoto"
+aboutmeBlock = do 
+        rightPicture aboutmeContent (storageETH "images/myself2.jpg") "Photo of myself" "myphoto"

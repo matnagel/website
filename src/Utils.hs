@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Utils (
 addheader,
-leftRight,
 rightPicture,
+flex,
 image,
 page,
 link,
@@ -15,49 +16,69 @@ pageTitle,
 br,
 Html,
 p,
+h1,
+h2,
+li,
 em,
+ul,
 pre,
 toHtml,
 storageETH,
-divClass
+divClass,
+div,
+(!),
+style,
 ) where
 
 import Prelude hiding (head, div, id)
 import Text.Blaze.Html5 ( (!), Html )
-import Text.Blaze.Html5 hiding (link, title)
+--import Text.Blaze.Html5 hiding (link, title, style)
 import qualified Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A
+import qualified Text.Blaze.Html5.Attributes as A
 
 import Data.String
 
-page mtitle content = docTypeHtml $ do
+style = A.style
+pre = H.pre
+em = H.em
+p = H.p
+br = H.br
+toHtml = H.toHtml
+h1 = H.h1
+h2 = H.h2
+
+li = H.li
+ul = H.ul
+div = H.div
+
+page mtitle content = H.docTypeHtml $ do
   addheader mtitle
   content
 
-divId :: AttributeValue -> Html -> Html
+divId :: H.AttributeValue -> Html -> Html
 divId id content = H.div ! A.id id $ content
 
-divClass :: AttributeValue -> Html -> Html
+divClass :: H.AttributeValue -> Html -> Html
 divClass cls content = H.div ! A.class_ cls $ content
 
 headline = H.h2
 pageTitle = H.h1
 
-addheader mtitle = head $ do
-        meta ! httpEquiv "content-type" ! content "text/html; charset=utf-8"
+addheader mtitle = H.head $ do
+        H.meta ! A.httpEquiv "content-type" ! A.content "text/html; charset=utf-8"
         H.title mtitle
-        H.link ! rel "stylesheet" ! type_ "text/css" ! href "./css/default.css"
+        H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "./css/default.css"
 
-leftRight left right = divClass "leftright" $ do
-    H.div $ left
-    H.div $ right
+flex = divClass "flex"
 
-image url desc pid = img ! A.src url ! A.alt desc ! A.id pid
+image url desc pid = H.img ! A.src url ! A.alt desc ! A.id pid
 
 link :: String -> String -> Html
-link url name = a ! href (fromString url) $ (fromString name)
+link url name = H.a ! A.href (fromString url) $ (fromString name)
 
-rightPicture left url desc pid = leftRight left (image url desc pid)
+rightPicture left url desc pid = flex $ do 
+        left 
+        image url desc pid
 
 homework url name due = do
   link url name
@@ -66,15 +87,15 @@ homework url name due = do
 
 mathjax :: Html
 mathjax = do
-  script ! type_ "text/x-mathjax-config" $
-    preEscapedString "MathJax.Hub.Config({\
+  H.script ! A.type_ "text/x-mathjax-config" $
+    H.preEscapedString "MathJax.Hub.Config({\
     \ tex2jax: {\
     \ inlineMath: [ ['$','$'] ],\
     \  processEscapes: true\
     \ }\
     \ });"
-  script ! type_ "text/javascript"
-    ! src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML"
+  H.script ! A.type_ "text/javascript"
+    ! A.src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML"
     $ mempty
 
 menuBlock = do

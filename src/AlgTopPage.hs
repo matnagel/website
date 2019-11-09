@@ -5,8 +5,6 @@ algTopPage
 ) where
 
 import Prelude hiding (head, div, id)
-import Text.Blaze.Html5 ( (!), Html, h1, h2, br, li, ul, em, p )
-import Text.Blaze.Html5.Attributes ( class_ )
 import Utils
 
 algTopPage = page "M731 Algebraic Topology" $ do
@@ -15,7 +13,7 @@ algTopPage = page "M731 Algebraic Topology" $ do
 
 desItem :: Html -> Html -> Html
 desItem desc cont = do
-    h2 ! class_ "many" $ desc
+    h2 desc
     cont
 
 algTopContent = do
