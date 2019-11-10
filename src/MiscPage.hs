@@ -14,6 +14,11 @@ miscPage = page "Miscellaneous" $ do
         link "https://math.ethz.ch/news-and-events/events/research-seminars.html" "Seminars at ETH"
         headline "GDPR"
         p gdprNotice
+        headline "Credits"
+        p $ do 
+            "The picture of the clasp was created with "
+            link "https://github.com/jemmybutton/fiziko" "fiziko"
+            "."
 
 gdprNotice :: Html
 gdprNotice = do 
