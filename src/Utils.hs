@@ -78,7 +78,7 @@ link url name = H.a ! A.href (fromString url) $ (fromString name)
 
 rightPicture left url desc pid = flex $ do 
         left 
-        image url desc pid
+        (image url desc pid) ! style "margin-left: 1ex"
 
 homework url name due = do
   link url name
