@@ -35,9 +35,10 @@ indexContent = do
 
 researchBlock = do
             headline "Interests"
-            p "My field of study is geometric topology. I am interested in geometric objects up to dimension 4 and their embeddings. In particular, I study knots such as the one below:"
-            flex ! style "justify-content:center; margin-bottom:1ex" $ image (storageETH "images/clasp.jpg") "Clasp" "clasp"
-            -- p "My research focuses on concordance of links, and surfaces of minimal genus in 3- and 4-manifolds and their relation to smooth structures."
+            p "My field of study is geometric topology. I am interested in geometric objects up to dimension 4 and their embeddings. In particular, I study knots and their mathematical properties. Here is an example of an interesting (part of a) knot:"
+            flex ! style "justify-content:center; margin:2ex" $ image (storageETH "images/clasp.jpg") "Clasp" "clasp"
+            p "I am especially curious about concordance, a special equivalence relation on knots. This relation is intimately tied to questions on the topology of 4-manifolds and their smooth structures."
+            -- p "The study of knots and their concordance classes is intimately related to the topology of 4-manifolds and their smooth structures. This is also the focus of my work on surfaces of minimal genus in 3- and 4-manifolds."  
 
 ethaddress = pre "matthias.nagel (at) math.ethz.ch\n\n\
         \Department of Mathematics\n\
