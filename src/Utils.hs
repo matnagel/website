@@ -28,6 +28,7 @@ divClass,
 div,
 (!),
 style,
+(<>)
 ) where
 
 import Prelude hiding (head, div, id)
@@ -37,6 +38,7 @@ import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
 import Data.String
+import Data.Monoid
 
 style = A.style
 pre = H.pre
