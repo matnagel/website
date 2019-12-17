@@ -7,6 +7,10 @@ teachingPage
 import Prelude hiding (div)
 import Utils
 
+eth19mfds = headline "ETH / Introduction to 3-manifolds"
+    <> p "An introduction to the basic notions and tools of geometric topology with a special focus on three dimensional manifolds."
+    <> p "G26.5, Fridays 11:10"
+
 mac18Instanton = headline "McMaster / Instantons and 4-manifolds"
     <> p "We will go through the book of Freed and Uhlenbeck, and learn about Instantons and 4-manifolds and the involved analysis. This will culminate in a proof of Donaldson's diagonalisation theorem."
     <> p "H312, Fridays 11:15"
@@ -68,6 +72,7 @@ mcCplx = headline "McGill / Math 381"
 teachingPage :: Html
 teachingPage = page "Teaching" 
     $ menuBlock
+   <> eth19mfds 
    <> mac18Instanton
    <> macMCZ
    <> bulbSeminar
