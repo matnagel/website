@@ -1,4 +1,11 @@
-[
+[    
+    {
+    "Coauthors":   ["A. Conway"],
+    "Title":    "Twisted signatures of fibered knots",
+    "Date":     "2020",
+    "Arxiv":    "2001.05675"
+    },
+
     {
     "Coauthors":   ["S. Friedl", "P. Orson", "M. Powell"],
     "Title":    "A survey of the foundations of four-manifold theory in the topological category",
