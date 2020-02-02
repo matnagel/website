@@ -19,3 +19,4 @@ main = do
     writeFile "output/algtop.html" $ renderHtml $ algTopPage
     writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
     writeFile "output/misc.html" $ renderHtml $ miscPage
+    writeFile "output/geotop.html" $ renderHtml $ geoTopPage

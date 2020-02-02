@@ -5,25 +5,26 @@ indexPage,
 teachingPage,
 publicationPage,
 algTopPage,
+geoTopPage,
 miscPage,
 topSemPage
 ) where
 
 import Prelude hiding (div)
 import BibliographyGenerator
-import AlgTopPage (algTopPage)
+import CoursePages (algTopPage, geoTopPage)
 import TopologySeminar (topSemPage)
 import MiscPage (miscPage)
 import TeachingPage
 import Utils
 
-publicationPage bib = page "Publications" 
+publicationPage bib = page "Publications"
     $ menuBlock
     <> pageTitle "Publications"
     <> generateBibliography bib
 
 indexPage :: Html
-indexPage = page "Index" 
+indexPage = page "Index"
         $ menuBlock
         <> indexContent
 
@@ -38,16 +39,16 @@ researchBlock = headline "Interests"
             <> p "I am especially curious about concordance, a special equivalence relation on knots. This relation is intimately tied to questions on the topology of 4-manifolds and their smooth structures."
             <> projects
 
-projects = p 
-    $ "If you are interested in writing bachelor thesis or a semester project with me, here are some possible " 
-    <> link (storageETH "projects.pdf") "topics" 
+projects = p
+    $ "If you are interested in writing bachelor thesis or a semester project with me, here are some possible "
+    <> link (storageETH "projects.pdf") "topics"
     <> "."
 
 ethaddress = pre "matthias.nagel (at) math.ethz.ch\n\n\
         \Department of Mathematics\n\
         \ETH Zurich, Switzerland"
 
-whoIam = p 
+whoIam = p
         $ "I am a postdoc on the job market. Here is a " 
         <> link (storageETH "nagelCV.pdf") "CV"
         <> "."

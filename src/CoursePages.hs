@@ -1,11 +1,36 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module AlgTopPage (
-algTopPage
+module CoursePages (
+algTopPage,
+geoTopPage
 ) where
 
 import Prelude hiding (head, div, id)
 import Utils
+
+geoTopPage = page "Introduction to 3-manifolds" (
+    h1 "Introduction to 3-manifolds"
+    <> image (storageETH "images/braid.jpg") "A braid" "braid"
+    <> desItem "Lecture" ( do
+        "Fridays, 11:00 - 13:00"
+        br
+        "HG G26.5"
+        p "The lectures start in Week 2, Friday 28.11."
+        )
+    <> desItem "Homework" mempty
+    <> desItem "Textbooks" ( ul $ do
+        li $ book "Knots and links" "by D. Rolfsen"
+        li $ book "3-manifolds" "by J. Hempel"
+        li $ book "Differential Topology" "by T. Bröcker, K. Jänich"
+        )
+    <> desItem "Contact" ( do
+        "Matthias Nagel"
+        br
+        "matthias.nagel (at) math.ethz.ch"
+        br
+        "HG G28"
+        )
+    )
 
 algTopPage = page "M731 Algebraic Topology" $ do
   h1 "M731 Algebraic Topology"
@@ -55,10 +80,10 @@ booksItem = ul $ do
     li $ do
         link "https://www.math.cornell.edu/~hatcher/AT/ATpage.html" "Algebraic Topology"
         " by A. Hatcher"
-    li $ book "Topology" " by Munkres"
-    li $ book "Basic Concepts of Algebraic Topology" " by F. Croom"
+    li $ book "Topology" "by Munkres"
+    li $ book "Basic Concepts of Algebraic Topology" "by F. Croom"
     li $ do
           link "http://www.math.uchicago.edu/~may/CONCISE/ConciseRevised.pdf" "A Concise Course in Algebraic Topology"
-          " by P. May"
+          "by P. May"
 
-book title author = (em title) >> author
+book title author = (em title) >> " " >> author
