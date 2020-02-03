@@ -22,6 +22,7 @@ geoTopPage = page "Introduction to 3-manifolds" (
         li $ book "Knots and links" "by D. Rolfsen"
         li $ book "3-manifolds" "by J. Hempel"
         li $ book "Differential Topology" "by T. Bröcker, K. Jänich"
+        li $ book "Differential Topology" "by C. Wall"
         )
     <> desItem "Contact" ( do
         "Matthias Nagel"
