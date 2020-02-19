@@ -12,10 +12,10 @@ geoTopPage = page "Introduction to 3-manifolds" (
     h1 "Introduction to 3-manifolds"
     <> image (storageETH "images/braid.jpg") "A braid" "braid"
     <> desItem "Lecture" ( do
-        "Fridays, 11:00 - 13:00"
+        "Fridays, 11:15 - 12:45"
         br
         "HG G26.5"
-        p "The lectures start in Week 2, Friday 28.11."
+        p "The lectures start in Week 2, Friday 28.02."
         )
     <> desItem "Homework" mempty
     <> desItem "Textbooks" ( ul $ do

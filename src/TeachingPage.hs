@@ -9,7 +9,7 @@ import Utils
 
 eth19mfds = headline "ETH / Introduction to 3-manifolds"
     <> p "An introduction to the basic notions and tools of geometric topology with a special focus on three dimensional manifolds."
-    <> p "G26.5, Fridays 11:10"
+    <> p "G26.5, Fridays 11:15"
     <> p (link "./geotop.html" "Course page")
 
 mac18Instanton = headline "McMaster / Instantons and 4-manifolds"
