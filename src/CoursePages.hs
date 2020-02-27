@@ -15,7 +15,7 @@ geoTopPage = page "Introduction to 3-manifolds" (
         "Fridays, 11:15 - 12:45"
         br
         "HG G26.5"
-        p "The lectures start in Week 2, Friday 28.02."
+        p "The lectures start in Week 3, Friday 6.03."
         )
     <> desItem "Homework" mempty
     <> desItem "Textbooks" ( ul $ do
