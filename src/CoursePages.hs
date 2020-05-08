@@ -11,13 +11,14 @@ import Utils
 geoTopPage = page "Introduction to 3-manifolds" (
     h1 "Introduction to 3-manifolds"
     <> image (storageETH "images/braid.jpg") "A braid" "braid"
-    <> desItem "Lecture" ( do
-        "Fridays, 11:15 - 12:45"
-        br
-        "HG G26.5"
-        p "The lectures start in Week 3, Friday 6.03."
+    <> desItem "Announcements" ( ul $ do
+        li $ "Since all classroom teaching has been suspended, the course will continue online. I will provide you with recorded lectures, which are complemented by zoom meetings."
         )
-    <> desItem "Homework" mempty
+    <> desItem "Homework" (ul $ do
+        li $ link (storageETH "pdf/20geotop/homework1.pdf") "Homework 1"
+        li $ link (storageETH "pdf/20geotop/homework2.pdf") "Homework 2"
+        li $ link (storageETH "pdf/20geotop/homework3.pdf") "Homework 3"
+        )
     <> desItem "Textbooks" ( ul $ do
         li $ book "Knots and links" "by D. Rolfsen"
         li $ book "3-manifolds" "by J. Hempel"

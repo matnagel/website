@@ -1,5 +1,12 @@
 [    
     {
+    "Coauthors":   ["P. Feller", "A. N. Miller", "P. Orson", "M. Powell", "A. Ray"],
+    "Title":    "Embedding spheres in knot traces",
+    "Date":     "2020",
+    "Arxiv":    "2004.04204"
+    },
+
+    {
     "Coauthors":   ["A. Conway"],
     "Title":    "Twisted signatures of fibered knots",
     "Date":     "2020",
