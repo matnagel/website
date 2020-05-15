@@ -24,6 +24,7 @@ geoTopPage = page "Introduction to 3-manifolds" (
         li $ book "3-manifolds" "by J. Hempel"
         li $ book "Differential Topology" "by T. Bröcker, K. Jänich"
         li $ book "Differential Topology" "by C. Wall"
+        li $ book (link "http://people.math.harvard.edu/~kupers/teaching/272x/index.html" "Diffeomorphism groups of disks") "by A. Kupers"
         )
     <> desItem "Contact" ( do
         "Matthias Nagel"

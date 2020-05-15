@@ -9,10 +9,12 @@ import Data.Foldable
 
 data SeparatedEntry a = Entry a a | EmptyEntry
 
-instance Monoid a => Monoid (SeparatedEntry a) where
-  mappend (Entry x s) (Entry y t) = Entry (x <> s <> y) t
-  mappend EmptyEntry q = q
-  mappend p EmptyEntry = p
+instance Semigroup a => Semigroup (SeparatedEntry a) where
+  (<>) (Entry x s) (Entry y t) = Entry (x <> s <> y) t
+  (<>) EmptyEntry q = q
+  (<>) p EmptyEntry = p
+
+instance Semigroup a => Monoid (SeparatedEntry a) where
   mempty = EmptyEntry
 
 extract :: Monoid a => SeparatedEntry a -> a
