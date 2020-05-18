@@ -22,6 +22,7 @@ dependencies:
 - bytestring
 - aeson
 - parsec
+- containers
 
 library:
   source-dirs: src
