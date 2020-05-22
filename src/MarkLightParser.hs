@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module MarkLightParser
-  (
+  ( interpretMarkLight,
+    parseMarkLight,
+    LocalPath(..),
+    Page
   )
 where
 
@@ -28,23 +31,27 @@ import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec.String
-import Utils
+import qualified Utils as U
 import Prelude hiding (div, head, id)
 
 newtype URLPath = MkURLPath String deriving (Show)
 
 newtype LocalPath = MkLocalPath String deriving (Show)
 
-newtype Name = MkName String deriving (Show)
+newtype TargetPath = MkTargetPath String deriving (Show)
+
+newtype Title = MkTitle String deriving (Show)
 
 newtype Text = MkText String deriving (Show)
 
 newtype Options = MkOptions (M.Map String String) deriving (Show)
 
+data FileSource = MkFileSource LocalPath String deriving (Show)
+
 data LightAtom
   = Word String
   | Newline
-  | Picture URLPath Name
+  | Picture URLPath Title
   | Link URLPath Text
   deriving (Show)
 
@@ -64,22 +71,43 @@ instance Semigroup LightBlock where
 instance Monoid LightBlock where
   mempty = Plain []
 
-data PageInformation = PageInformation
-  { getName :: Name,
-    getOutput :: LocalPath
-  }
-  deriving (Show)
+data PageInformation = MkPageInformation Title TargetPath deriving (Show)
 
-data Page = Page PageInformation LightBlock deriving (Show)
+data Page = MkPage PageInformation LightBlock deriving (Show)
 
-maybeFail :: MonadFail m => Maybe a -> String -> m a
-maybeFail (Just x) _ = return x
-maybeFail Nothing str = fail str
+-- Tokenized character sets for the various areas
+urlLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char '.' <|> char '-')
 
-getPageInformation :: MonadFail m => Options -> m PageInformation
-getPageInformation (MkOptions omap) = PageInformation
-    <$> maybeFail (MkName <$> M.lookup "name" omap) "Could not retrieve name"
-    <*> maybeFail (MkLocalPath <$> M.lookup "path" omap) "Could not retrieve path"
+linkLetters = tokenize $ many1 (alphaNum <|> char ' ' <|> char '.')
+
+keyletters = tokenize $ many1 alphaNum
+
+valueLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char ' ' <|> char '.')
+
+wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!' <|> char '?' <|> char ','
+
+charToken a = tokenize $ char a
+
+stringToken str = tokenize $ string str
+
+braceCommand str p =
+  tokenize $
+    between
+      (charToken '{')
+      (charToken '}')
+      (stringToken str >> p)
+
+quote p = tokenize $ between (char '\"') (charToken '\"') p
+
+failIfAbsent :: MonadFail m => Maybe a -> String -> m a
+failIfAbsent (Just x) _ = return x
+failIfAbsent Nothing str = fail str
+
+extractPageInformation :: MonadFail m => Options -> m PageInformation
+extractPageInformation (MkOptions omap) =
+  MkPageInformation
+    <$> failIfAbsent (MkTitle <$> M.lookup "title" omap) "Could not retrieve title="
+    <*> failIfAbsent (MkTargetPath <$> M.lookup "path" omap) "Could not retrieve path="
 
 ensureStartOfLine :: Monad m => ParsecT s u m ()
 ensureStartOfLine = do
@@ -93,71 +121,83 @@ preventStartOfLine = do
 
 redundantSpace = (preventStartOfLine >> space) <|> char ' ' <|> tab
 
-lexemeRedundant :: Parser a -> Parser a
-lexemeRedundant p = p <* (many redundantSpace)
+tokenize :: Parser a -> Parser a
+tokenize p = p <* (many redundantSpace)
 
-lexemeBlock :: Parser a -> Parser a
-lexemeBlock p = p <* spaces
+tokenizeBlock :: Parser a -> Parser a
+tokenizeBlock p = p <* spaces
 
-wordLetter = alphaNum <|> char '.' <|> char ':'
 
 parseWord :: Parser LightAtom
-parseWord = lexemeRedundant (Word <$> (many1 wordLetter))
+parseWord = tokenize (Word <$> (many1 wordLetter))
 
 emptyLine :: Parser LightAtom
 emptyLine = (newline) *> (return Newline)
 
-symbol a = lexemeRedundant $ char a
-
-stringToken str = lexemeRedundant $ string str
-
-urlLetters = lexemeRedundant $ many1 (alphaNum <|> char ':' <|> char '/')
-
-linkLetters = lexemeRedundant $ many1 (alphaNum <|> char ' ')
-
-keyletters = lexemeRedundant $ many1 alphaNum
-
-valueLetters = lexemeRedundant $ many1 (alphaNum <|> char ':' <|> char '/' <|> char ' ')
-
-braceCommand str p = lexemeRedundant $ between (symbol '{') (symbol '}') (stringToken str >> p)
-
 parseOptionsHelper :: Parser (String, String)
-parseOptionsHelper = lexemeRedundant $ do
+parseOptionsHelper = tokenize $ do
   key <- keyletters
-  symbol '='
-  value <- between (symbol '\"') (symbol '\"') valueLetters
+  charToken '='
+  value <- quote valueLetters
   return $ (key, value)
 
 parseOptions :: Parser Options
-parseOptions = lexemeRedundant $ do
+parseOptions = tokenize $ do
   opts <- many parseOptionsHelper
   return $ MkOptions $ M.fromList opts
 
 parsePageInformation :: Parser PageInformation
-parsePageInformation = braceCommand "page" $ do
+parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
   opts <- parseOptions
-  getPageInformation opts
+  extractPageInformation opts
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ do
-  url <- between (symbol '\"') (symbol '\"') urlLetters
-  name <- between (symbol '\"') (symbol '\"') linkLetters
+  url <- quote urlLetters
+  name <- quote linkLetters
   return $ Link (MkURLPath url) (MkText name)
 
 parseHeader :: Parser LightBlock
-parseHeader = ensureStartOfLine *> do
-  symbol '='
+parseHeader = tokenizeBlock $ ensureStartOfLine *> do
+  charToken '='
   hdr <- many1 parseWord
   return $ Header hdr
 
 parseParagraph :: Parser LightBlock
-parseParagraph = ensureStartOfLine *> do
+parseParagraph = tokenizeBlock $ ensureStartOfLine *> do
   text <- many1 (parseWord <|> parseLink)
   return $ Para text
 
 parsePage :: Parser Page
 parsePage = do
   pageInformation <- parsePageInformation
-  elms <- many $ lexemeBlock (parseHeader <|> parseParagraph)
+  elms <- many (parseHeader <|> parseParagraph)
   eof
-  return $ Page pageInformation $ mconcat elms
+  return $ MkPage pageInformation $ mconcat elms
+
+parseMarkLight :: MonadFail m => LocalPath -> String -> m Page
+parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
+    Left err -> fail $ show err
+    Right page -> return page
+
+interpretMarkLight :: Page -> U.Html
+interpretMarkLight (MkPage pageinfo lightblock) = U.page (renderTitle pageinfo) $ do
+    U.menuBlock
+    U.pageTitle (renderTitle pageinfo)
+    renderLightBlock lightblock
+
+renderTitle :: PageInformation -> U.Html
+renderTitle (MkPageInformation (MkTitle title) _) = U.toHtml title
+
+renderLightBlock :: LightBlock -> U.Html
+renderLightBlock (Header las) = U.headline (renderLightAtomList las)
+renderLightBlock (Plain lbs) = mconcat (map renderLightBlock lbs)
+renderLightBlock (Para las) = U.p $ (renderLightAtomList las)
+
+renderLightAtomList :: [LightAtom] -> U.Html
+renderLightAtomList [] = mempty
+renderLightAtomList (x:xs) = renderLightAtom x <> " " <> renderLightAtomList xs
+
+renderLightAtom :: LightAtom -> U.Html
+renderLightAtom (Word str) = U.toHtml str
+renderLightAtom (Link (MkURLPath path) (MkText txt)) = U.link path txt
