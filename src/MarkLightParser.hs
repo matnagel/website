@@ -7,7 +7,9 @@ module MarkLightParser
     Page,
     LightAtom(..),
     LightBlock(..),
-    parseParagraph
+    parseParagraph,
+    parseLink,
+    parseArguments
   )
 where
 
@@ -47,7 +49,21 @@ newtype Title = MkTitle String deriving (Eq, Show)
 
 newtype Text = MkText String deriving (Eq, Show)
 
-newtype Options = MkOptions (M.Map String String) deriving (Show)
+newtype Arguments = MkArguments (M.Map String String)
+
+instance Semigroup Arguments where
+    (<>) (MkArguments a) (MkArguments b) = MkArguments (b <> a)
+
+instance Monoid Arguments where
+    mempty = MkArguments mempty
+
+showArgument (k,v) = k ++ "=" ++ show v
+interleave sep [] = []
+interleave sep (x:[]) = x
+interleave sep (x:ys) = x <> sep <> interleave sep ys
+
+instance Show Arguments where
+    show (MkArguments a) = "(" ++ interleave ", " (showArgument <$> (M.toList a)) ++ ")"
 
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
@@ -105,8 +121,8 @@ failIfAbsent :: MonadFail m => Maybe a -> String -> m a
 failIfAbsent (Just x) _ = return x
 failIfAbsent Nothing str = fail str
 
-extractPageInformation :: MonadFail m => Options -> m PageInformation
-extractPageInformation (MkOptions omap) =
+extractPageInformation :: MonadFail m => Arguments -> m PageInformation
+extractPageInformation (MkArguments omap) =
   MkPageInformation
     <$> failIfAbsent (MkTitle <$> M.lookup "title" omap) "Could not retrieve title="
     <*> failIfAbsent (MkTargetPath <$> M.lookup "path" omap) "Could not retrieve path="
@@ -125,10 +141,12 @@ preventStartOfLine = do
 
 blank = char ' '
 nonNewlineSpace = blank <|> tab
-spacesWithAtMostOneNewline = (many1 nonNewlineSpace) <|> (newline >> (many nonNewlineSpace))
+spacesWithAtMostOneNewline = do
+    many nonNewlineSpace
+    optional (newline >> (many nonNewlineSpace))
 
 tokenize :: Parser a -> Parser a
-tokenize p = p <* spacesWithAtMostOneNewline
+tokenize p = p <* optional spacesWithAtMostOneNewline
 
 tokenizeBlock :: Parser a -> Parser a
 tokenizeBlock p = p <* spaces
@@ -151,21 +169,21 @@ optionalSepBy sep p = do
             ps <- p
             return (ss:ps:[])
 
-parseOptionsHelper :: Parser (String, String)
-parseOptionsHelper = tokenize $ do
+parseArgument :: Parser Arguments
+parseArgument = tokenize $ do
   key <- keyletters
   charToken '='
   value <- quote valueLetters
-  return $ (key, value)
+  return $ MkArguments $ M.singleton key value
 
-parseOptions :: Parser Options
-parseOptions = tokenize $ do
-  opts <- many parseOptionsHelper
-  return $ MkOptions $ M.fromList opts
+parseArguments :: Parser Arguments
+parseArguments = tokenize $ do
+  opts <- sepBy parseArgument $ optional (charToken ',')
+  return $ mconcat opts
 
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
-  opts <- parseOptions
+  opts <- parseArguments
   extractPageInformation opts
 
 parseLink :: Parser LightAtom

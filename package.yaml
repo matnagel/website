@@ -3,8 +3,8 @@ version:             0.1.0.0
 # github:              "githubuser/simple"
 license:             BSD3
 author:              "Matthias nagel"
-maintainer:          "nagel@cirget.ca"
-copyright:           "2018 Matthias Nagel"
+maintainer:          "matthias.nagel@math.ethz.ch"
+copyright:           "2020 Matthias Nagel"
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
