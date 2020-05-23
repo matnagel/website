@@ -23,6 +23,7 @@ dependencies:
 - aeson
 - parsec
 - containers
+- HUnit
 
 library:
   source-dirs: src
@@ -38,13 +39,10 @@ executables:
     dependencies:
     - WebSite
 
-# tests:
-#   website-test:
-#     main:                Spec.hs
-#     source-dirs:         test
-#     ghc-options:
-#     - -threaded
-#     - -rtsopts
-#     - -with-rtsopts=-N
-#     dependencies:
-#     - WebSite
+tests:
+  marklight-test:
+    main:                MarkTest.hs
+    source-dirs:         test
+    dependencies:
+        - HUnit
+        - WebSite

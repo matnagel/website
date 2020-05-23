@@ -4,7 +4,10 @@ module MarkLightParser
   ( interpretMarkLight,
     parseMarkLight,
     LocalPath(..),
-    Page
+    Page,
+    LightAtom(..),
+    LightBlock(..),
+    parseParagraph
   )
 where
 
@@ -34,15 +37,15 @@ import Text.Parsec.String
 import qualified Utils as U
 import Prelude hiding (div, head, id)
 
-newtype URLPath = MkURLPath String deriving (Show)
+newtype URLPath = MkURLPath String deriving (Eq, Show)
 
 newtype LocalPath = MkLocalPath String deriving (Show)
 
 newtype TargetPath = MkTargetPath String deriving (Show)
 
-newtype Title = MkTitle String deriving (Show)
+newtype Title = MkTitle String deriving (Eq, Show)
 
-newtype Text = MkText String deriving (Show)
+newtype Text = MkText String deriving (Eq, Show)
 
 newtype Options = MkOptions (M.Map String String) deriving (Show)
 
@@ -51,16 +54,17 @@ data FileSource = MkFileSource LocalPath String deriving (Show)
 data LightAtom
   = Word String
   | Newline
+  | Space
   | Picture URLPath Title
   | Link URLPath Text
-  deriving (Show)
+  deriving (Eq, Show)
 
 data LightBlock
   = Plain [LightBlock]
   | HFlex [LightBlock]
   | Para [LightAtom]
   | Header [LightAtom]
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance Semigroup LightBlock where
   (<>) (Plain a) (Plain b) = Plain (a <> b)
@@ -90,11 +94,9 @@ charToken a = tokenize $ char a
 
 stringToken str = tokenize $ string str
 
-braceCommand str p =
-  tokenize $
-    between
+braceCommand str p = between
       (charToken '{')
-      (charToken '}')
+      (char '}')
       (stringToken str >> p)
 
 quote p = tokenize $ between (char '\"') (charToken '\"') p
@@ -119,17 +121,19 @@ preventStartOfLine = do
   pos <- getPosition
   guard (sourceColumn pos /= 1)
 
-redundantSpace = (preventStartOfLine >> space) <|> char ' ' <|> tab
+inlineSpace = (preventStartOfLine >> space) <|> char ' ' <|> tab
 
 tokenize :: Parser a -> Parser a
-tokenize p = p <* (many redundantSpace)
+tokenize p = p <* (many inlineSpace)
 
 tokenizeBlock :: Parser a -> Parser a
 tokenizeBlock p = p <* spaces
 
+parseSpace :: Parser LightAtom
+parseSpace = tokenize (inlineSpace >> return Space)
 
 parseWord :: Parser LightAtom
-parseWord = tokenize (Word <$> (many1 wordLetter))
+parseWord = Word <$> (many1 wordLetter)
 
 emptyLine :: Parser LightAtom
 emptyLine = (newline) *> (return Newline)
@@ -165,8 +169,15 @@ parseHeader = tokenizeBlock $ ensureStartOfLine *> do
 
 parseParagraph :: Parser LightBlock
 parseParagraph = tokenizeBlock $ ensureStartOfLine *> do
-  text <- many1 (parseWord <|> parseLink)
-  return $ Para text
+  text <- many1 (parseWord <|> parseLink <|> parseSpace)
+  return $ Para $ removeRedundantSpaces text
+
+removeRedundantSpaces :: [LightAtom] -> [LightAtom]
+removeRedundantSpaces [] = []
+removeRedundantSpaces (Space:xs) = removeRedundantSpaces xs
+removeRedundantSpaces (x:Space:Space:xs) = removeRedundantSpaces (x:Space:xs)
+removeRedundantSpaces (x:Space:y:xs) = x:Space:removeRedundantSpaces (y:xs)
+removeRedundantSpaces (x:xs) = x:removeRedundantSpaces xs
 
 parsePage :: Parser Page
 parsePage = do
@@ -195,9 +206,9 @@ renderLightBlock (Plain lbs) = mconcat (map renderLightBlock lbs)
 renderLightBlock (Para las) = U.p $ (renderLightAtomList las)
 
 renderLightAtomList :: [LightAtom] -> U.Html
-renderLightAtomList [] = mempty
-renderLightAtomList (x:xs) = renderLightAtom x <> " " <> renderLightAtomList xs
+renderLightAtomList las = mconcat $ renderLightAtom <$> las
 
 renderLightAtom :: LightAtom -> U.Html
 renderLightAtom (Word str) = U.toHtml str
 renderLightAtom (Link (MkURLPath path) (MkText txt)) = U.link path txt
+renderLightAtom Space = U.toHtml (" " :: String)
