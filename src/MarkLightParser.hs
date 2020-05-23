@@ -121,22 +121,35 @@ preventStartOfLine = do
   pos <- getPosition
   guard (sourceColumn pos /= 1)
 
-inlineSpace = (preventStartOfLine >> space) <|> char ' ' <|> tab
+-- inlineSpace = (preventStartOfLine >> space) <|> char ' ' <|> tab
+
+blank = char ' '
+nonNewlineSpace = blank <|> tab
+spacesWithAtMostOneNewline = (many1 nonNewlineSpace) <|> (newline >> (many nonNewlineSpace))
 
 tokenize :: Parser a -> Parser a
-tokenize p = p <* (many inlineSpace)
+tokenize p = p <* spacesWithAtMostOneNewline
 
 tokenizeBlock :: Parser a -> Parser a
 tokenizeBlock p = p <* spaces
 
 parseSpace :: Parser LightAtom
-parseSpace = tokenize (inlineSpace >> return Space)
+parseSpace = tokenize ( (lookAhead space) >> return Space)
 
 parseWord :: Parser LightAtom
 parseWord = Word <$> (many1 wordLetter)
 
-emptyLine :: Parser LightAtom
-emptyLine = (newline) *> (return Newline)
+-- emptyLine :: Parser LightAtom
+-- emptyLine = (newline) *> (return Newline)
+
+optionalSepBy :: Parser a -> Parser a -> Parser [a]
+optionalSepBy sep p = do
+    as <- many1 (helper sep p <|> return <$> p)
+    return $ concat as
+    where helper sep p = try $ do
+            ss <- sep
+            ps <- p
+            return (ss:ps:[])
 
 parseOptionsHelper :: Parser (String, String)
 parseOptionsHelper = tokenize $ do
@@ -169,7 +182,7 @@ parseHeader = tokenizeBlock $ ensureStartOfLine *> do
 
 parseParagraph :: Parser LightBlock
 parseParagraph = tokenizeBlock $ ensureStartOfLine *> do
-  text <- many1 (parseWord <|> parseLink <|> parseSpace)
+  text <- optionalSepBy parseSpace (parseWord <|> parseLink)
   return $ Para $ removeRedundantSpaces text
 
 removeRedundantSpaces :: [LightAtom] -> [LightAtom]

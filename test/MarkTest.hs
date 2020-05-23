@@ -25,7 +25,7 @@ runList (t : ts) = do
 
 main :: IO ()
 main = do
-  runList [parseBlockTest]
+  runList [testParagraphs]
   return ()
 
 createParseTest :: (Show a, Eq a) => Parser a -> String -> a -> String -> Test
@@ -45,8 +45,8 @@ createParseFailTest p desc input =
         (isLeft $ parse p "TestInput" input)
     )
 
-parseBlockTest =
-  TestLabel "Parse Expression Tests" $
+testParagraphs =
+  TestLabel "Test Parse Paragraphs" $
     TestList
       [ cParagraph
           "Correct paragraph"
