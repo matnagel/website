@@ -4,7 +4,7 @@
 {-# LANGUAGE GADTs #-}
 
 module BibliographyGenerator (
-generateBibliography
+    generateBibliography
 ) where
 
 import Data.Aeson

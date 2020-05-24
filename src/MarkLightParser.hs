@@ -39,6 +39,8 @@ import Text.Parsec.String
 import qualified Utils as U
 import Prelude hiding (div, head, id)
 
+import MarkLight.Arguments
+
 newtype URLPath = MkURLPath String deriving (Eq, Show)
 
 newtype LocalPath = MkLocalPath String deriving (Show)
@@ -48,22 +50,6 @@ newtype TargetPath = MkTargetPath String deriving (Show)
 newtype Title = MkTitle String deriving (Eq, Show)
 
 newtype Text = MkText String deriving (Eq, Show)
-
-newtype Arguments = MkArguments (M.Map String String)
-
-instance Semigroup Arguments where
-    (<>) (MkArguments a) (MkArguments b) = MkArguments (b <> a)
-
-instance Monoid Arguments where
-    mempty = MkArguments mempty
-
-showArgument (k,v) = k ++ "=" ++ show v
-interleave sep [] = []
-interleave sep (x:[]) = x
-interleave sep (x:ys) = x <> sep <> interleave sep ys
-
-instance Show Arguments where
-    show (MkArguments a) = "(" ++ interleave ", " (showArgument <$> (M.toList a)) ++ ")"
 
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
@@ -100,10 +86,6 @@ urlLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char '.' <
 
 linkLetters = tokenize $ many1 (alphaNum <|> char ' ' <|> char '.')
 
-keyletters = tokenize $ many1 alphaNum
-
-valueLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char ' ' <|> char '.')
-
 wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!' <|> char '?' <|> char ','
 
 charToken a = tokenize $ char a
@@ -115,17 +97,15 @@ braceCommand str p = between
       (char '}')
       (stringToken str >> p)
 
-quote p = tokenize $ between (char '\"') (charToken '\"') p
-
 failIfAbsent :: MonadFail m => Maybe a -> String -> m a
 failIfAbsent (Just x) _ = return x
 failIfAbsent Nothing str = fail str
 
 extractPageInformation :: MonadFail m => Arguments -> m PageInformation
-extractPageInformation (MkArguments omap) =
+extractPageInformation args =
   MkPageInformation
-    <$> failIfAbsent (MkTitle <$> M.lookup "title" omap) "Could not retrieve title="
-    <*> failIfAbsent (MkTargetPath <$> M.lookup "path" omap) "Could not retrieve path="
+    <$> failIfAbsent (MkTitle <$> getArgument "title" args) "Could not retrieve title="
+    <*> failIfAbsent (MkTargetPath <$> getArgument "path" args) "Could not retrieve path="
 
 ensureStartOfLine :: Monad m => ParsecT s u m ()
 ensureStartOfLine = do
@@ -168,18 +148,6 @@ optionalSepBy sep p = do
             ss <- sep
             ps <- p
             return (ss:ps:[])
-
-parseArgument :: Parser Arguments
-parseArgument = tokenize $ do
-  key <- keyletters
-  charToken '='
-  value <- quote valueLetters
-  return $ MkArguments $ M.singleton key value
-
-parseArguments :: Parser Arguments
-parseArguments = tokenize $ do
-  opts <- sepBy parseArgument $ optional (charToken ',')
-  return $ mconcat opts
 
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
