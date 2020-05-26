@@ -68,8 +68,10 @@ data LightBlock
   = Plain [LightBlock]
   | HFlex [LightBlock]
   | Para [LightAtom]
+  | Direct [LightAtom]
   | Header [LightAtom]
   | Enumeration [LightBlock]
+  | Comment
   deriving (Eq, Show)
 
 instance Semigroup LightBlock where
@@ -204,10 +206,16 @@ parseParagraph = tokenizeBlock $ do
   text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parsePicture <|> try parseBook)
   return $ Para $ removeRedundantSpaces text
 
+parseDirect :: Parser LightBlock
+parseDirect = tokenizeBlock $ do
+  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parsePicture <|> try parseBook)
+  return $ Direct $ removeRedundantSpaces text
+
+
 parseEnumItem :: Parser LightBlock
 parseEnumItem = tokenize $ ensureStartOfLine *> do
     charToken '-'
-    block <- parseBlock
+    block <- parseDirect
     return block
 
 parseEnumeration :: Parser LightBlock
@@ -215,8 +223,13 @@ parseEnumeration = tokenizeBlock $ ensureStartOfLine *> do
     blocks <- many1 parseEnumItem
     return $ Enumeration blocks
 
+parseComment :: Parser LightBlock
+parseComment = tokenizeBlock $ ensureStartOfLine *> do
+    charToken '#'
+    manyTill anyChar (newline) >> return Comment
+
 parseBlock :: Parser LightBlock
-parseBlock = parseEnumeration <|> parseHeader <|> parseParagraph
+parseBlock = parseEnumeration <|> parseHeader <|> parseParagraph <|> parseComment
 
 parsePage :: Parser Page
 parsePage = do
@@ -232,7 +245,7 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 
 interpretMarkLight :: Page -> U.Html
 interpretMarkLight (MkPage pageinfo lightblock) = U.page (renderTitle pageinfo) $ do
-    U.menuBlock
+    -- U.menuBlock
     U.pageTitle (renderTitle pageinfo)
     renderLightBlock lightblock
 
@@ -243,6 +256,9 @@ renderLightBlock :: LightBlock -> U.Html
 renderLightBlock (Header las) = U.headline (renderLightAtomList las)
 renderLightBlock (Plain lbs) = mconcat (map renderLightBlock lbs)
 renderLightBlock (Para las) = U.p $ (renderLightAtomList las)
+renderLightBlock (Direct las) = renderLightAtomList las
+renderLightBlock (Enumeration las) = U.ul $ mconcat $ U.li <$> (renderLightBlock <$> las)
+renderLightBlock Comment = mempty
 
 renderLightAtomList :: [LightAtom] -> U.Html
 renderLightAtomList las = mconcat $ renderLightAtom <$> las
@@ -251,3 +267,6 @@ renderLightAtom :: LightAtom -> U.Html
 renderLightAtom (Word str) = U.toHtml str
 renderLightAtom (Link (MkURLPath path) (MkText txt)) = U.link path txt
 renderLightAtom Space = U.toHtml (" " :: String)
+renderLightAtom Newline = U.br
+renderLightAtom (Picture (MkURLPath path) (MkTitle title)) = U.toHtml ("A picture" :: String)
+renderLightAtom (Book (MkTitle title) (MkAuthor author)) = (U.em $ U.toHtml $ title) <> (U.toHtml $ " by " ++ author)

@@ -78,8 +78,8 @@ image url desc pid = H.img ! A.src url ! A.alt desc ! A.id pid
 link :: String -> String -> Html
 link url name = H.a ! A.href (fromString url) $ (fromString name)
 
-rightPicture left url desc pid = flex $ do 
-        left 
+rightPicture left url desc pid = flex $ do
+        left
         (image url desc pid) ! style "margin-left: 1ex"
 
 homework url name due = do
