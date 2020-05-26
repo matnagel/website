@@ -5,6 +5,7 @@ import Data.Either (isLeft)
 import Data.Map as Map
 import Data.String
 import MarkLightParser
+import MarkLight.Arguments
 import Test.HUnit
 import Text.Parsec
 import Text.Parsec.String
@@ -100,8 +101,21 @@ testArguments = TestLabel "Tests argument" $
         cArguments
           "Arguments comma separated"
           "id=\"tag\", name=\"me\", opt=\"dog\", url=\"www.bla\""
-          "url=\"www.bla\",name=\"me\", id=\"tag\" , opt=\"dog\""
+          "url=\"www.bla\",name=\"me\", id=\"tag\" , opt=\"dog\"",
+        cDefaultArguments
+          "Default arguments"
+          "id=\"tag\", name=\"me\", url=\"www.bla\""
+          "\"www.bla\" \"me\", id=\"tag\"",
+        cDefaultArguments
+          "Necessary second argument is not named."
+          "id=\"tag\", name=\"me\", url=\"www.bla\""
+          "url=\"www.bla\" \"me\", id=\"tag\"",
+        cMissingArguments
+          "Not all arguments present"
+          "\"me\", id=\"tag\""
       ]
   where
     cArguments = createParseTest parseArguments
+    cDefaultArguments = createParseTest $ parseArgumentsWithDefaults ["url", "name"]
+    cMissingArguments = createParseFailTest $ parseArgumentsWithDefaults ["url", "name"]
 

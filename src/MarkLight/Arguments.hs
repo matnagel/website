@@ -2,6 +2,7 @@
 
 module MarkLight.Arguments
   ( parseArguments,
+    parseArgumentsWithDefaults,
     Arguments,
     getArgument,
     quote
@@ -9,6 +10,7 @@ module MarkLight.Arguments
 where
 
 import Control.Monad
+import Optics
 import qualified Data.Map as M
 import qualified Text.Parsec as P
 import Text.Parsec
@@ -35,6 +37,15 @@ import qualified Utils as U
 import Prelude hiding (div, head, id)
 
 newtype Arguments = MkArguments (M.Map String String)
+
+argumentsGetter :: Arguments -> M.Map String String
+argumentsGetter (MkArguments arg) = arg
+
+argumentsSetter :: Arguments -> M.Map String String -> Arguments
+argumentsSetter (MkArguments arg) sarg = MkArguments $ sarg
+
+argumentsOptic = lens argumentsGetter argumentsSetter
+
 data AccumulateArguments = MkAcc [String] Arguments
 
 instance Semigroup Arguments where
@@ -90,17 +101,28 @@ parseUnassignedArgument = tokenize $ do
 parseAccumulateArguments :: Parser AccumulateArguments
 parseAccumulateArguments = tokenize $ do
     opts <- sepBy (parseUnassignedArgument
-                    <|> (MkAcc [] <$> parseArgument))$ optional (charToken ',')
+                    <|> (MkAcc [] <$> parseArgument)) $ optional (charToken ',')
     return $ mconcat opts
 
-parseArgumentsWithKeys :: [String] -> Parser Arguments
-parseArgumentsWithKeys keys = tokenize $ do
-    (MkAcc ls args) <- parseAccumulateArguments
-    return $ args
+isArgumentPresent ::  Arguments -> String -> Bool
+isArgumentPresent (MkArguments arg) key = M.member key arg
+
+parseArgumentsWithDefaults :: [String] -> Parser Arguments
+parseArgumentsWithDefaults keys = tokenize $ do
+    args <- addKeysWithDefaults keys <$> parseAccumulateArguments
+    case and $ (isArgumentPresent args) <$> keys of
+        True -> return args
+        False -> fail "Not all necessary arguments present"
+
+addKeysWithDefaults :: [String] -> AccumulateArguments -> Arguments
+addKeysWithDefaults [] (MkAcc _ args) = args
+addKeysWithDefaults _ (MkAcc [] args) = args
+addKeysWithDefaults (k:ks) aa@(MkAcc (v:vs) args) = if (M.notMember k $ view argumentsOptic args)
+    then addKeysWithDefaults ks (MkAcc vs $ over argumentsOptic (M.insert k v) args)
+    else addKeysWithDefaults ks aa
 
 parseArguments :: Parser Arguments
-parseArguments = parseArgumentsWithKeys []
-
+parseArguments = parseArgumentsWithDefaults []
 
 getArgument :: String -> Arguments -> Maybe String
 getArgument str (MkArguments mp) = M.lookup str mp

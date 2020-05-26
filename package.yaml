@@ -24,6 +24,7 @@ dependencies:
 - parsec
 - containers
 - HUnit
+- optics
 
 library:
   source-dirs: src
