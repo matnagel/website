@@ -49,6 +49,8 @@ newtype TargetPath = MkTargetPath String deriving (Show)
 
 newtype Title = MkTitle String deriving (Eq, Show)
 
+newtype Author = MkAuthor String deriving (Eq, Show)
+
 newtype Text = MkText String deriving (Eq, Show)
 
 data FileSource = MkFileSource LocalPath String deriving (Show)
@@ -59,6 +61,7 @@ data LightAtom
   | Space
   | Picture URLPath Title
   | Link URLPath Text
+  | Book Title Author
   deriving (Eq, Show)
 
 data LightBlock
@@ -66,6 +69,7 @@ data LightBlock
   | HFlex [LightBlock]
   | Para [LightAtom]
   | Header [LightAtom]
+  | Enumeration [LightBlock]
   deriving (Eq, Show)
 
 instance Semigroup LightBlock where
@@ -86,7 +90,7 @@ urlLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char '.' <
 
 linkLetters = tokenize $ many1 (alphaNum <|> char ' ' <|> char '.')
 
-wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!' <|> char '?' <|> char ','
+wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!' <|> char '?' <|> char ',' <|> char ')' <|> char '('
 
 charToken a = tokenize $ char a
 
@@ -137,8 +141,8 @@ parseSpace = tokenize ( (lookAhead space) >> return Space)
 parseWord :: Parser LightAtom
 parseWord = Word <$> (many1 wordLetter)
 
--- emptyLine :: Parser LightAtom
--- emptyLine = (newline) *> (return Newline)
+parseLinebreak :: Parser LightAtom
+parseLinebreak = tokenize $ try (stringToken "<br>" >> (return Newline))
 
 optionalSepBy :: Parser a -> Parser a -> Parser [a]
 optionalSepBy sep p = do
@@ -151,25 +155,42 @@ optionalSepBy sep p = do
 
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
-  opts <- parseArguments
+  opts <- parseArgumentsWithDefaults ["path","title"]
   extractPageInformation opts
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ do
-  url <- quote urlLetters
-  name <- quote linkLetters
-  return $ Link (MkURLPath url) (MkText name)
+    opts <- parseArgumentsWithDefaults ["path", "text"]
+    case Link
+        <$> (MkURLPath <$> getArgument "path" opts)
+        <*> (MkText <$> getArgument "text" opts) of
+        Nothing -> fail "Arguments for link not present"
+        Just lnk -> return lnk
+
+parsePicture :: Parser LightAtom
+parsePicture = braceCommand "picture" $ do
+  opts <- parseArgumentsWithDefaults ["path", "title"]
+  case Picture
+    <$> (MkURLPath <$> getArgument "path" opts)
+    <*> (MkTitle <$> getArgument "title" opts) of
+    Nothing -> fail "Arguments for picture not present"
+    Just pic -> return pic
+
+parseBook :: Parser LightAtom
+parseBook = braceCommand "book" $ do
+  opts <- parseArgumentsWithDefaults ["title", "author"]
+  case Book
+    <$> (MkTitle <$> getArgument "title" opts)
+    <*> (MkAuthor <$> getArgument "author" opts) of
+    Nothing -> fail "Arguments for author not present"
+    Just bk -> return bk
+
 
 parseHeader :: Parser LightBlock
 parseHeader = tokenizeBlock $ ensureStartOfLine *> do
   charToken '='
   hdr <- many1 parseWord
   return $ Header hdr
-
-parseParagraph :: Parser LightBlock
-parseParagraph = tokenizeBlock $ ensureStartOfLine *> do
-  text <- optionalSepBy parseSpace (parseWord <|> parseLink)
-  return $ Para $ removeRedundantSpaces text
 
 removeRedundantSpaces :: [LightAtom] -> [LightAtom]
 removeRedundantSpaces [] = []
@@ -178,10 +199,29 @@ removeRedundantSpaces (x:Space:Space:xs) = removeRedundantSpaces (x:Space:xs)
 removeRedundantSpaces (x:Space:y:xs) = x:Space:removeRedundantSpaces (y:xs)
 removeRedundantSpaces (x:xs) = x:removeRedundantSpaces xs
 
+parseParagraph :: Parser LightBlock
+parseParagraph = tokenizeBlock $ do
+  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parsePicture <|> try parseBook)
+  return $ Para $ removeRedundantSpaces text
+
+parseEnumItem :: Parser LightBlock
+parseEnumItem = tokenize $ ensureStartOfLine *> do
+    charToken '-'
+    block <- parseBlock
+    return block
+
+parseEnumeration :: Parser LightBlock
+parseEnumeration = tokenizeBlock $ ensureStartOfLine *> do
+    blocks <- many1 parseEnumItem
+    return $ Enumeration blocks
+
+parseBlock :: Parser LightBlock
+parseBlock = parseEnumeration <|> parseHeader <|> parseParagraph
+
 parsePage :: Parser Page
 parsePage = do
   pageInformation <- parsePageInformation
-  elms <- many (parseHeader <|> parseParagraph)
+  elms <- many parseBlock
   eof
   return $ MkPage pageInformation $ mconcat elms
 

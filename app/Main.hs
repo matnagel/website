@@ -26,6 +26,8 @@ main = do
     writeFile "output/algtop.html" $ renderHtml $ algTopPage
     writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
     -- writeFile "output/misc.html" $ renderHtml $ miscPage
-    writeFile "output/geotop.html" $ renderHtml $ geoTopPage
+    -- writeFile "output/geotop.html" $ renderHtml $ geoTopPage
     miscPage <- loadMarkLight "resources/marklight/misc.mu"
     writeFile "output/misc.html" $ renderHtml $ interpretMarkLight $ miscPage
+    geoTopPage <- loadMarkLight "resources/marklight/geotop.mu"
+    writeFile "output/geotop.html" $ renderHtml $ interpretMarkLight $ geoTopPage

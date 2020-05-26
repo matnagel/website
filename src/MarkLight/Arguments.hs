@@ -67,7 +67,8 @@ charToken a = tokenize $ char a
 
 keyletters = tokenize $ many1 alphaNum
 
-valueLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char ' ' <|> char '.')
+valueLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char ' '
+    <|> char '.' <|> char ',' <|> char '-' <|> char '~')
 
 showArgument (k, v) = k ++ "=" ++ show v
 
@@ -79,7 +80,6 @@ instance Show Arguments where
   show (MkArguments a) = "(" ++ interleave ", " (showArgument <$> (M.toList a)) ++ ")"
 
 quote p = tokenize $ between (char '\"') (charToken '\"') p
-
 
 parseArgument :: Parser Arguments
 parseArgument = tokenize $ do
@@ -104,15 +104,15 @@ parseAccumulateArguments = tokenize $ do
                     <|> (MkAcc [] <$> parseArgument)) $ optional (charToken ',')
     return $ mconcat opts
 
-isArgumentPresent ::  Arguments -> String -> Bool
-isArgumentPresent (MkArguments arg) key = M.member key arg
+isArgumentPresent :: MonadFail m => Arguments -> String -> m ()
+isArgumentPresent (MkArguments arg) key = case M.member key arg of
+    True -> return $ ()
+    False -> fail $ "Argument error: Key " ++ key ++ "=\"..\" is missing."
 
 parseArgumentsWithDefaults :: [String] -> Parser Arguments
 parseArgumentsWithDefaults keys = tokenize $ do
     args <- addKeysWithDefaults keys <$> parseAccumulateArguments
-    case and $ (isArgumentPresent args) <$> keys of
-        True -> return args
-        False -> fail "Not all necessary arguments present"
+    foldr (*>) (return args) (isArgumentPresent args <$> keys)
 
 addKeysWithDefaults :: [String] -> AccumulateArguments -> Arguments
 addKeysWithDefaults [] (MkAcc _ args) = args
