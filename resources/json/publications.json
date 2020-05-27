@@ -24,14 +24,16 @@
     "Coauthors":   ["A. Conway"],
     "Title":    "Stably slice disks of links",
     "Date":     "2019",
-    "Arxiv":    "1901.01393"
+    "Arxiv":    "1901.01393",
+    "Note": "accepted in J. Topol."
     },
 
     {
     "Coauthors":   ["C. Davis", "P. Orson", "M. Powell"],
     "Title":    "Triple linking numbers and surface systems",
     "Date":     "2017",
-    "Arxiv":    "1709.08478"
+    "Arxiv":    "1709.08478",
+    "Note": "accepted in Indiana Univ. Math. J."
     },
 
     {
@@ -50,8 +52,11 @@
 	"Title":	"Smooth and topological almost concordance",
 	"Date":		"2017",
 	"Arxiv":	"1707.01147",
-	"Note": "accepted in Int. Math. Res. Notices."
-    },
+	"Journal": {
+			"Name": "Int. Math. Res. Notices.",
+			"Volume": "23 (2019): 7324-7355"
+	           }
+        },
 
     	{
 	"Coauthors":	["A. Conway", "E. Toffoli"],
@@ -66,7 +71,10 @@
 	"Title":	"Satellites and concordance of knots in 3-manifolds",
 	"Date":		"2016",
 	"Arxiv":	"1611.09114",
-  	"Note": "accepted in Trans. Amer. Math. Soc."
+	"Journal": {
+			"Name": "Trans. Amer. Math. Soc.",
+			"Volume": "371.4 (2019): 2279-2306"
+		   }
 	},
 
 	{
