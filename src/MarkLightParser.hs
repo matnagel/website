@@ -56,6 +56,24 @@ newtype Text = MkText String deriving (Eq, Show)
 newtype CSSID = MkID String deriving (Eq, Show)
 
 
+instance IsValue URLPath where
+    fromValue (MkValue val) = MkURLPath val
+
+instance IsValue Title where
+    fromValue (MkValue val) = MkTitle val
+
+instance IsValue TargetPath where
+    fromValue (MkValue val) = MkTargetPath val
+
+instance IsValue Text where
+    fromValue (MkValue val) = MkText val
+
+instance IsValue CSSID where
+    fromValue (MkValue val) = MkID val
+
+instance IsValue Author where
+    fromValue (MkValue val) = MkAuthor val
+
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
 data LightAtom
@@ -90,31 +108,18 @@ data PageInformation = MkPageInformation Title TargetPath deriving (Show)
 
 data Page = MkPage PageInformation LightBlock deriving (Show)
 
--- Tokenized character sets for the various areas
-urlLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char '.' <|> char '-')
-
-linkLetters = tokenize $ many1 (alphaNum <|> char ' ' <|> char '.')
-
-wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!' <|> char '?' <|> char ',' <|> char ')' <|> char '('
+-- Tokenized character sets for paragraphs
+wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!'
+    <|> char '?' <|> char ',' <|> char ')' <|> char '('
 
 charToken a = tokenize $ char a
 
 stringToken str = tokenize $ string str
 
 braceCommand str p = between
-      (charToken '{')
+      (try $ charToken '{' *> stringToken str)
       (char '}')
-      (stringToken str >> p)
-
-failIfAbsent :: MonadFail m => Maybe a -> String -> m a
-failIfAbsent (Just x) _ = return x
-failIfAbsent Nothing str = fail str
-
-extractPageInformation :: MonadFail m => Arguments -> m PageInformation
-extractPageInformation args =
-  MkPageInformation
-    <$> failIfAbsent (MkTitle <$> getArgument "title" args) "Could not retrieve title="
-    <*> failIfAbsent (MkTargetPath <$> getArgument "path" args) "Could not retrieve path="
+      p
 
 ensureStartOfLine :: Monad m => ParsecT s u m ()
 ensureStartOfLine = do
@@ -161,14 +166,18 @@ optionalSepBy sep p = do
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
   opts <- parseArgumentsWithDefaults ["path","title"]
-  extractPageInformation opts
+  case MkPageInformation
+    <$> getArgument "title" opts
+    <*> getArgument "path" opts of
+    Nothing -> fail "Could not retrieve arguments to construct PageInformation"
+    Just pinfo -> return pinfo
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ do
     opts <- parseArgumentsWithDefaults ["path", "text"]
     case Link
-        <$> (MkURLPath <$> getArgument "path" opts)
-        <*> (MkText <$> getArgument "text" opts) of
+        <$> (getArgument "path" opts)
+        <*> (getArgument "text" opts) of
         Nothing -> fail "Arguments for link not present"
         Just lnk -> return lnk
 
@@ -176,9 +185,9 @@ parsePicture :: Parser LightBlock
 parsePicture = ensureStartOfLine *> (tokenizeBlock $ braceCommand "picture" $ do
   opts <- parseArgumentsWithDefaults ["path", "title", "id"]
   case Picture
-    <$> (MkURLPath <$> getArgument "path" opts)
-    <*> (MkTitle <$> getArgument "title" opts)
-    <*> (MkID <$> getArgument "id" opts) of
+    <$> (getArgument "path" opts)
+    <*> (getArgument "title" opts)
+    <*> (getArgument "id" opts) of
     Nothing -> fail "Arguments for picture not present"
     Just pic -> return pic)
 
@@ -186,9 +195,9 @@ parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ do
   opts <- parseArgumentsWithDefaults ["title", "author"]
   case Book
-    <$> (MkTitle <$> getArgument "title" opts)
-    <*> (MkAuthor <$> getArgument "author" opts)
-    <*> (return $ MkURLPath <$> getArgument "link" opts) of
+    <$> (getArgument "title" opts)
+    <*> (getArgument "author" opts)
+    <*> (getOptionalArgument "link" opts) of
     Nothing -> fail "Arguments for author not present"
     Just bk -> return bk
 
@@ -206,16 +215,18 @@ removeRedundantSpaces (x:Space:Space:xs) = removeRedundantSpaces (x:Space:xs)
 removeRedundantSpaces (x:Space:y:xs) = x:Space:removeRedundantSpaces (y:xs)
 removeRedundantSpaces (x:xs) = x:removeRedundantSpaces xs
 
+parseAtom :: Parser LightAtom
+parseAtom = (parseLinebreak <|> parseWord <|> parseLink <|> parseBook)
+
 parseParagraph :: Parser LightBlock
 parseParagraph = tokenizeBlock $ do
-  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parseBook)
+  text <- optionalSepBy parseSpace parseAtom
   return $ Para $ removeRedundantSpaces text
 
 parseDirect :: Parser LightBlock
 parseDirect = tokenizeBlock $ do
-  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parseBook)
+  text <- optionalSepBy parseSpace parseAtom
   return $ Direct $ removeRedundantSpaces text
-
 
 parseEnumItem :: Parser LightBlock
 parseEnumItem = tokenize $ ensureStartOfLine *> do

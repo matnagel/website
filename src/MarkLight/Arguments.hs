@@ -5,7 +5,10 @@ module MarkLight.Arguments
     parseArgumentsWithDefaults,
     Arguments,
     getArgument,
-    quote
+    getOptionalArgument,
+    quote,
+    Value(..),
+    IsValue(..)
   )
 where
 
@@ -36,17 +39,26 @@ import Text.Parsec.String
 import qualified Utils as U
 import Prelude hiding (div, head, id)
 
-newtype Arguments = MkArguments (M.Map String String)
 
-argumentsGetter :: Arguments -> M.Map String String
+newtype Value = MkValue String
+
+instance Show Value where
+    show (MkValue str) = show str
+
+class IsValue a where
+    fromValue :: Value -> a
+
+newtype Arguments = MkArguments (M.Map String Value)
+
+argumentsGetter :: Arguments -> M.Map String Value
 argumentsGetter (MkArguments arg) = arg
 
-argumentsSetter :: Arguments -> M.Map String String -> Arguments
+argumentsSetter :: Arguments -> M.Map String Value -> Arguments
 argumentsSetter (MkArguments arg) sarg = MkArguments $ sarg
 
 argumentsOptic = lens argumentsGetter argumentsSetter
 
-data AccumulateArguments = MkAcc [String] Arguments
+data AccumulateArguments = MkAcc [Value] Arguments
 
 instance Semigroup Arguments where
   (<>) (MkArguments a) (MkArguments b) = MkArguments (b <> a)
@@ -85,7 +97,7 @@ parseArgument :: Parser Arguments
 parseArgument = tokenize $ do
   key <- keyletters
   charToken '='
-  value <- quote valueLetters
+  value <- MkValue <$> quote valueLetters
   return $ MkArguments $ M.singleton key value
 
 -- parseArguments :: Parser Arguments
@@ -95,7 +107,7 @@ parseArgument = tokenize $ do
 
 parseUnassignedArgument :: Parser AccumulateArguments
 parseUnassignedArgument = tokenize $ do
-    value <- quote valueLetters
+    value <- MkValue <$> quote valueLetters
     return $ MkAcc [value] mempty
 
 parseAccumulateArguments :: Parser AccumulateArguments
@@ -124,5 +136,8 @@ addKeysWithDefaults (k:ks) aa@(MkAcc (v:vs) args) = if (M.notMember k $ view arg
 parseArguments :: Parser Arguments
 parseArguments = parseArgumentsWithDefaults []
 
-getArgument :: String -> Arguments -> Maybe String
-getArgument str (MkArguments mp) = M.lookup str mp
+getArgument :: IsValue a => String -> Arguments -> Maybe a
+getArgument str (MkArguments mp) = fromValue <$> M.lookup str mp
+
+getOptionalArgument :: IsValue a => String -> Arguments -> Maybe (Maybe a)
+getOptionalArgument str (MkArguments mp) = return $ fromValue <$> (M.lookup str mp)
