@@ -73,7 +73,7 @@ addheader mtitle = H.head $ do
 
 flex = divClass "flex"
 
-image url desc pid = H.img ! A.src url ! A.alt desc ! A.id pid
+image url desc pid = H.img ! A.src (fromString url) ! A.alt (fromString desc) ! A.id (fromString pid)
 
 link :: String -> String -> Html
 link url name = H.a ! A.href (fromString url) $ (fromString name)

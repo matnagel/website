@@ -53,15 +53,17 @@ newtype Author = MkAuthor String deriving (Eq, Show)
 
 newtype Text = MkText String deriving (Eq, Show)
 
+newtype CSSID = MkID String deriving (Eq, Show)
+
+
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
 data LightAtom
   = Word String
   | Newline
   | Space
-  | Picture URLPath Title
   | Link URLPath Text
-  | Book Title Author
+  | Book Title Author (Maybe URLPath)
   deriving (Eq, Show)
 
 data LightBlock
@@ -71,6 +73,7 @@ data LightBlock
   | Direct [LightAtom]
   | Header [LightAtom]
   | Enumeration [LightBlock]
+  | Picture URLPath Title CSSID
   | Comment
   deriving (Eq, Show)
 
@@ -169,21 +172,23 @@ parseLink = braceCommand "link" $ do
         Nothing -> fail "Arguments for link not present"
         Just lnk -> return lnk
 
-parsePicture :: Parser LightAtom
-parsePicture = braceCommand "picture" $ do
-  opts <- parseArgumentsWithDefaults ["path", "title"]
+parsePicture :: Parser LightBlock
+parsePicture = ensureStartOfLine *> (tokenizeBlock $ braceCommand "picture" $ do
+  opts <- parseArgumentsWithDefaults ["path", "title", "id"]
   case Picture
     <$> (MkURLPath <$> getArgument "path" opts)
-    <*> (MkTitle <$> getArgument "title" opts) of
+    <*> (MkTitle <$> getArgument "title" opts)
+    <*> (MkID <$> getArgument "id" opts) of
     Nothing -> fail "Arguments for picture not present"
-    Just pic -> return pic
+    Just pic -> return pic)
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ do
   opts <- parseArgumentsWithDefaults ["title", "author"]
   case Book
     <$> (MkTitle <$> getArgument "title" opts)
-    <*> (MkAuthor <$> getArgument "author" opts) of
+    <*> (MkAuthor <$> getArgument "author" opts)
+    <*> (return $ MkURLPath <$> getArgument "link" opts) of
     Nothing -> fail "Arguments for author not present"
     Just bk -> return bk
 
@@ -203,12 +208,12 @@ removeRedundantSpaces (x:xs) = x:removeRedundantSpaces xs
 
 parseParagraph :: Parser LightBlock
 parseParagraph = tokenizeBlock $ do
-  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parsePicture <|> try parseBook)
+  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parseBook)
   return $ Para $ removeRedundantSpaces text
 
 parseDirect :: Parser LightBlock
 parseDirect = tokenizeBlock $ do
-  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parsePicture <|> try parseBook)
+  text <- optionalSepBy parseSpace (parseLinebreak <|> parseWord <|> try parseLink <|> try parseBook)
   return $ Direct $ removeRedundantSpaces text
 
 
@@ -229,7 +234,9 @@ parseComment = tokenizeBlock $ ensureStartOfLine *> do
     manyTill anyChar (newline) >> return Comment
 
 parseBlock :: Parser LightBlock
-parseBlock = parseEnumeration <|> parseHeader <|> parseParagraph <|> parseComment
+parseBlock = parseEnumeration
+    <|> parseHeader <|> parseParagraph
+    <|> parseComment <|> parsePicture
 
 parsePage :: Parser Page
 parsePage = do
@@ -258,6 +265,7 @@ renderLightBlock (Plain lbs) = mconcat (map renderLightBlock lbs)
 renderLightBlock (Para las) = U.p $ (renderLightAtomList las)
 renderLightBlock (Direct las) = renderLightAtomList las
 renderLightBlock (Enumeration las) = U.ul $ mconcat $ U.li <$> (renderLightBlock <$> las)
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id)) = U.image path title id
 renderLightBlock Comment = mempty
 
 renderLightAtomList :: [LightAtom] -> U.Html
@@ -268,5 +276,5 @@ renderLightAtom (Word str) = U.toHtml str
 renderLightAtom (Link (MkURLPath path) (MkText txt)) = U.link path txt
 renderLightAtom Space = U.toHtml (" " :: String)
 renderLightAtom Newline = U.br
-renderLightAtom (Picture (MkURLPath path) (MkTitle title)) = U.toHtml ("A picture" :: String)
-renderLightAtom (Book (MkTitle title) (MkAuthor author)) = (U.em $ U.toHtml $ title) <> (U.toHtml $ " by " ++ author)
+renderLightAtom (Book (MkTitle title) (MkAuthor author) Nothing) = (U.em $ U.toHtml $ title) <> (U.toHtml $ " by " ++ author)
+renderLightAtom (Book (MkTitle title) (MkAuthor author) (Just (MkURLPath path))) = (U.em $ U.link path title) <> (U.toHtml $ " by " ++ author)
