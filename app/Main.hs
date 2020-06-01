@@ -15,24 +15,24 @@ loadMarkLight path = do
     cont <- readFile path
     parseMarkLight (MkLocalPath path) cont
 
+runMarkLight :: String -> String -> IO ()
+runMarkLight input output = do
+    page <- loadMarkLight input
+    html <- interpretMarkLight $ page
+    writeFile output $ renderHtml html
+
+
 main :: IO ()
 main = do
     setLocaleEncoding utf8
-    bib <- readFile "resources/json/publications.json"
     time <- getCurrentTime
     writeFile "output/index.html" $ renderHtml $ indexPage
     writeFile "output/teaching.html" $ renderHtml $ teachingPage
     -- writeFile "output/publications.html" $ renderHtml $ publicationPage bib
-    pubPage <- loadMarkLight "resources/marklight/publications.mu"
-    pubHtml <- interpretMarkLight $ pubPage
-    writeFile "output/publications.html" $ renderHtml pubHtml
+    runMarkLight "resources/marklight/publications.mu" "output/publications.html"
     writeFile "output/algtop.html" $ renderHtml $ algTopPage
     writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
     -- writeFile "output/misc.html" $ renderHtml $ miscPage
     -- writeFile "output/geotop.html" $ renderHtml $ geoTopPage
-    miscPage <- loadMarkLight "resources/marklight/misc.mu"
-    miscHtml <- interpretMarkLight $ miscPage
-    writeFile "output/misc.html" $ renderHtml miscHtml
-    geoTopPage <- loadMarkLight "resources/marklight/geotop.mu"
-    geoTopHtml <- interpretMarkLight $ geoTopPage
-    writeFile "output/geotop.html" $ renderHtml geoTopHtml
+    runMarkLight "resources/marklight/misc.mu" "output/misc.html"
+    runMarkLight "resources/marklight/geotop.mu" "output/geotop.html"

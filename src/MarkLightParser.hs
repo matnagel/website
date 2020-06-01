@@ -276,13 +276,11 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 interpretMarkLight :: External m => Page -> m U.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
     blocks <- renderLightBlock lightblock
-    return $ interpretMarkLightHelper pageinfo blocks
+    return $ generatePageHeader pageinfo blocks
 
-interpretMarkLightHelper :: PageInformation -> U.Html -> U.Html
-interpretMarkLightHelper pageinfo bdy = U.page (renderTitle pageinfo) $ do
-    renderMenu pageinfo
-    U.pageTitle (renderTitle pageinfo)
-    bdy
+generatePageHeader :: PageInformation -> U.Html -> U.Html
+generatePageHeader pageinfo bdy = U.page (renderTitle pageinfo) $
+    renderMenu pageinfo <> U.pageTitle (renderTitle pageinfo) <> bdy
 
 renderMenu :: PageInformation -> U.Html
 renderMenu (MkPageInformation _ _ Nothing) = mempty
