@@ -55,6 +55,8 @@ newtype Text = MkText String deriving (Eq, Show)
 
 newtype CSSID = MkID String deriving (Eq, Show)
 
+newtype MenuInformation = MkMenu Bool deriving Show
+
 
 instance IsValue URLPath where
     fromValue (MkValue val) = MkURLPath val
@@ -73,6 +75,11 @@ instance IsValue CSSID where
 
 instance IsValue Author where
     fromValue (MkValue val) = MkAuthor val
+
+instance IsValue MenuInformation where
+    fromValue (MkValue "true") = MkMenu True
+    fromValue (MkValue "false") = MkMenu False
+    fromValue (MkValue _) = error "Either True or False"
 
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
@@ -104,7 +111,7 @@ instance Semigroup LightBlock where
 instance Monoid LightBlock where
   mempty = Plain []
 
-data PageInformation = MkPageInformation Title TargetPath deriving (Show)
+data PageInformation = MkPageInformation Title TargetPath (Maybe MenuInformation) deriving (Show)
 
 data Page = MkPage PageInformation LightBlock deriving (Show)
 
@@ -168,7 +175,8 @@ parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
   opts <- parseArgumentsWithDefaults ["path","title"]
   case MkPageInformation
     <$> getArgument "title" opts
-    <*> getArgument "path" opts of
+    <*> getArgument "path" opts
+    <*> getOptionalArgument "menu" opts of
     Nothing -> fail "Could not retrieve arguments to construct PageInformation"
     Just pinfo -> return pinfo
 
@@ -263,12 +271,17 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 
 interpretMarkLight :: Page -> U.Html
 interpretMarkLight (MkPage pageinfo lightblock) = U.page (renderTitle pageinfo) $ do
-    -- U.menuBlock
+    renderMenu pageinfo
     U.pageTitle (renderTitle pageinfo)
     renderLightBlock lightblock
 
+renderMenu :: PageInformation -> U.Html
+renderMenu (MkPageInformation _ _ Nothing) = mempty
+renderMenu (MkPageInformation _ _ (Just (MkMenu False))) = mempty
+renderMenu (MkPageInformation _ _ (Just (MkMenu True))) = U.menuBlock
+
 renderTitle :: PageInformation -> U.Html
-renderTitle (MkPageInformation (MkTitle title) _) = U.toHtml title
+renderTitle (MkPageInformation (MkTitle title) _ _) = U.toHtml title
 
 renderLightBlock :: LightBlock -> U.Html
 renderLightBlock (Header las) = U.headline (renderLightAtomList las)
