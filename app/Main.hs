@@ -22,12 +22,17 @@ main = do
     time <- getCurrentTime
     writeFile "output/index.html" $ renderHtml $ indexPage
     writeFile "output/teaching.html" $ renderHtml $ teachingPage
-    writeFile "output/publications.html" $ renderHtml $ publicationPage bib
+    -- writeFile "output/publications.html" $ renderHtml $ publicationPage bib
+    pubPage <- loadMarkLight "resources/marklight/publications.mu"
+    pubHtml <- interpretMarkLight $ pubPage
+    writeFile "output/publications.html" $ renderHtml pubHtml
     writeFile "output/algtop.html" $ renderHtml $ algTopPage
     writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
     -- writeFile "output/misc.html" $ renderHtml $ miscPage
     -- writeFile "output/geotop.html" $ renderHtml $ geoTopPage
     miscPage <- loadMarkLight "resources/marklight/misc.mu"
-    writeFile "output/misc.html" $ renderHtml $ interpretMarkLight $ miscPage
+    miscHtml <- interpretMarkLight $ miscPage
+    writeFile "output/misc.html" $ renderHtml miscHtml
     geoTopPage <- loadMarkLight "resources/marklight/geotop.mu"
-    writeFile "output/geotop.html" $ renderHtml $ interpretMarkLight $ geoTopPage
+    geoTopHtml <- interpretMarkLight $ geoTopPage
+    writeFile "output/geotop.html" $ renderHtml geoTopHtml

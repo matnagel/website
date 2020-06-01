@@ -37,13 +37,14 @@ import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec.String
 import qualified Utils as U
+import qualified BibliographyGenerator as BG
 import Prelude hiding (div, head, id)
 
 import MarkLight.Arguments
 
 newtype URLPath = MkURLPath String deriving (Eq, Show)
 
-newtype LocalPath = MkLocalPath String deriving (Show)
+newtype LocalPath = MkLocalPath String deriving (Eq, Show)
 
 newtype TargetPath = MkTargetPath String deriving (Show)
 
@@ -57,29 +58,37 @@ newtype CSSID = MkID String deriving (Eq, Show)
 
 newtype MenuInformation = MkMenu Bool deriving Show
 
-
 instance IsValue URLPath where
-    fromValue (MkValue val) = MkURLPath val
+    fromValue (MkValue val) = return $ MkURLPath val
+
+instance IsValue LocalPath where
+    fromValue (MkValue val) = return $ MkLocalPath val
 
 instance IsValue Title where
-    fromValue (MkValue val) = MkTitle val
+    fromValue (MkValue val) = return $ MkTitle val
 
 instance IsValue TargetPath where
-    fromValue (MkValue val) = MkTargetPath val
+    fromValue (MkValue val) = return $ MkTargetPath val
 
 instance IsValue Text where
-    fromValue (MkValue val) = MkText val
+    fromValue (MkValue val) = return $ MkText val
 
 instance IsValue CSSID where
-    fromValue (MkValue val) = MkID val
+    fromValue (MkValue val) = return $ MkID val
 
 instance IsValue Author where
-    fromValue (MkValue val) = MkAuthor val
+    fromValue (MkValue val) = return $ MkAuthor val
 
 instance IsValue MenuInformation where
-    fromValue (MkValue "true") = MkMenu True
-    fromValue (MkValue "false") = MkMenu False
-    fromValue (MkValue _) = error "Either True or False"
+    fromValue (MkValue "true") = return $ MkMenu True
+    fromValue (MkValue "false") = return $ MkMenu False
+    fromValue (MkValue _) = fail "MenuInformation needs to be either true or false"
+
+class (Monad m) => External m where
+    readResource :: LocalPath -> m String
+
+instance External IO where
+    readResource (MkLocalPath pth) = readFile pth
 
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
@@ -99,6 +108,7 @@ data LightBlock
   | Header [LightAtom]
   | Enumeration [LightBlock]
   | Picture URLPath Title CSSID
+  | PublicationList LocalPath
   | Comment
   deriving (Eq, Show)
 
@@ -138,8 +148,6 @@ preventStartOfLine = do
   pos <- getPosition
   guard (sourceColumn pos /= 1)
 
--- inlineSpace = (preventStartOfLine >> space) <|> char ' ' <|> tab
-
 blank = char ' '
 nonNewlineSpace = blank <|> tab
 spacesWithAtMostOneNewline = do
@@ -173,31 +181,16 @@ optionalSepBy sep p = do
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
   opts <- parseArgumentsWithDefaults ["path","title"]
-  case MkPageInformation
-    <$> getArgument "title" opts
+  MkPageInformation <$> getArgument "title" opts
     <*> getArgument "path" opts
-    <*> getOptionalArgument "menu" opts of
-    Nothing -> fail "Could not retrieve arguments to construct PageInformation"
-    Just pinfo -> return pinfo
+    <*> getOptionalArgument "menu" opts
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ do
     opts <- parseArgumentsWithDefaults ["path", "text"]
-    case Link
-        <$> (getArgument "path" opts)
-        <*> (getArgument "text" opts) of
-        Nothing -> fail "Arguments for link not present"
-        Just lnk -> return lnk
+    Link <$> (getArgument "path" opts)
+         <*> (getArgument "text" opts)
 
-parsePicture :: Parser LightBlock
-parsePicture = ensureStartOfLine *> (tokenizeBlock $ braceCommand "picture" $ do
-  opts <- parseArgumentsWithDefaults ["path", "title", "id"]
-  case Picture
-    <$> (getArgument "path" opts)
-    <*> (getArgument "title" opts)
-    <*> (getArgument "id" opts) of
-    Nothing -> fail "Arguments for picture not present"
-    Just pic -> return pic)
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ do
@@ -209,6 +202,17 @@ parseBook = braceCommand "book" $ do
     Nothing -> fail "Arguments for author not present"
     Just bk -> return bk
 
+parsePicture :: Parser LightBlock
+parsePicture = ensureStartOfLine *> (tokenizeBlock $ braceCommand "picture" $ do
+  opts <- parseArgumentsWithDefaults ["path", "title", "id"]
+  Picture <$> (getArgument "path" opts)
+    <*> (getArgument "title" opts)
+    <*> (getArgument "id" opts))
+
+parsePublicationList :: Parser LightBlock
+parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications" $ do
+  opts <- parseArgumentsWithDefaults ["path"]
+  PublicationList <$> (getArgument "path" opts))
 
 parseHeader :: Parser LightBlock
 parseHeader = tokenizeBlock $ ensureStartOfLine *> do
@@ -255,7 +259,7 @@ parseComment = tokenizeBlock $ ensureStartOfLine *> do
 parseBlock :: Parser LightBlock
 parseBlock = parseEnumeration
     <|> parseHeader <|> parseParagraph
-    <|> parseComment <|> parsePicture
+    <|> parseComment <|> parsePicture <|> parsePublicationList
 
 parsePage :: Parser Page
 parsePage = do
@@ -269,11 +273,16 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
     Left err -> fail $ show err
     Right page -> return page
 
-interpretMarkLight :: Page -> U.Html
-interpretMarkLight (MkPage pageinfo lightblock) = U.page (renderTitle pageinfo) $ do
+interpretMarkLight :: External m => Page -> m U.Html
+interpretMarkLight (MkPage pageinfo lightblock) = do
+    blocks <- renderLightBlock lightblock
+    return $ interpretMarkLightHelper pageinfo blocks
+
+interpretMarkLightHelper :: PageInformation -> U.Html -> U.Html
+interpretMarkLightHelper pageinfo bdy = U.page (renderTitle pageinfo) $ do
     renderMenu pageinfo
     U.pageTitle (renderTitle pageinfo)
-    renderLightBlock lightblock
+    bdy
 
 renderMenu :: PageInformation -> U.Html
 renderMenu (MkPageInformation _ _ Nothing) = mempty
@@ -283,14 +292,19 @@ renderMenu (MkPageInformation _ _ (Just (MkMenu True))) = U.menuBlock
 renderTitle :: PageInformation -> U.Html
 renderTitle (MkPageInformation (MkTitle title) _ _) = U.toHtml title
 
-renderLightBlock :: LightBlock -> U.Html
-renderLightBlock (Header las) = U.headline (renderLightAtomList las)
-renderLightBlock (Plain lbs) = mconcat (map renderLightBlock lbs)
-renderLightBlock (Para las) = U.p $ (renderLightAtomList las)
-renderLightBlock (Direct las) = renderLightAtomList las
-renderLightBlock (Enumeration las) = U.ul $ mconcat $ U.li <$> (renderLightBlock <$> las)
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id)) = U.image path title id
-renderLightBlock Comment = mempty
+renderLightBlock :: External m => LightBlock -> m U.Html
+renderLightBlock (Header las) = return $ U.headline (renderLightAtomList las)
+renderLightBlock (Plain lbs) = mconcat <$> traverse renderLightBlock lbs
+renderLightBlock (Para las) = return $ U.p $ (renderLightAtomList las)
+renderLightBlock (Direct las) = return $ renderLightAtomList las
+renderLightBlock (Enumeration las) = do
+    blocks <- traverse renderLightBlock las
+    return $ U.ul $ mconcat $ U.li <$> blocks
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id)) = return $ U.image path title id
+renderLightBlock Comment = return $ mempty
+renderLightBlock (PublicationList path) = do
+    bib <- readResource path
+    return $ BG.generateBibliography bib
 
 renderLightAtomList :: [LightAtom] -> U.Html
 renderLightAtomList las = mconcat $ renderLightAtom <$> las

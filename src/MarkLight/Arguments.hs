@@ -46,7 +46,7 @@ instance Show Value where
     show (MkValue str) = show str
 
 class IsValue a where
-    fromValue :: Value -> a
+    fromValue :: MonadFail m => Value -> m a
 
 newtype Arguments = MkArguments (M.Map String Value)
 
@@ -100,11 +100,6 @@ parseArgument = tokenize $ do
   value <- MkValue <$> quote valueLetters
   return $ MkArguments $ M.singleton key value
 
--- parseArguments :: Parser Arguments
--- parseArguments = tokenize $ do
---   opts <- sepBy parseArgument $ optional (charToken ',')
---   return $ mconcat opts
-
 parseUnassignedArgument :: Parser AccumulateArguments
 parseUnassignedArgument = tokenize $ do
     value <- MkValue <$> quote valueLetters
@@ -136,8 +131,12 @@ addKeysWithDefaults (k:ks) aa@(MkAcc (v:vs) args) = if (M.notMember k $ view arg
 parseArguments :: Parser Arguments
 parseArguments = parseArgumentsWithDefaults []
 
-getArgument :: IsValue a => String -> Arguments -> Maybe a
-getArgument str (MkArguments mp) = fromValue <$> M.lookup str mp
+getArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m a
+getArgument str (MkArguments mp) = case M.lookup str mp of
+    Nothing -> fail $ "No value for key \"" ++ str ++ "\""
+    Just val -> fromValue val
 
-getOptionalArgument :: IsValue a => String -> Arguments -> Maybe (Maybe a)
-getOptionalArgument str (MkArguments mp) = return $ fromValue <$> (M.lookup str mp)
+getOptionalArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m (Maybe a)
+getOptionalArgument str (MkArguments mp) = case M.lookup str mp of
+    Nothing -> return $ Nothing
+    Just val -> Just <$> fromValue val
