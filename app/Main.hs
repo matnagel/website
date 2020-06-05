@@ -6,9 +6,17 @@ import Text.Blaze.Html.Renderer.String
 import GHC.IO.Encoding
 import MyContent
 
+import qualified Utils as U
+
 import MarkLightParser
 
 import Data.Time.Clock
+
+instance ReadLocal IO where
+    readResource (MkLocalPath pth) = readFile pth
+
+instance HasMenu IO where
+    getMenu = return $ U.menuBlock
 
 loadMarkLight :: String -> IO Page
 loadMarkLight path = do
@@ -20,7 +28,6 @@ runMarkLight input output = do
     page <- loadMarkLight input
     html <- interpretMarkLight $ page
     writeFile output $ renderHtml html
-
 
 main :: IO ()
 main = do

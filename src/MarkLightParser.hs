@@ -9,7 +9,9 @@ module MarkLightParser
     LightBlock(..),
     parseParagraph,
     parseLink,
-    parseArguments
+    parseArguments,
+    ReadLocal(..),
+    HasMenu(..)
   )
 where
 
@@ -30,7 +32,7 @@ import Text.Parsec
     space,
     spaces,
     string,
-    try,
+    try
   )
 import Text.Parsec.Char
 import Text.Parsec.Combinator
@@ -84,11 +86,11 @@ instance IsValue MenuInformation where
     fromValue (MkValue "false") = return $ MkMenu False
     fromValue (MkValue _) = fail "MenuInformation needs to be either true or false"
 
-class (Monad m) => External m where
+class (Monad m) => ReadLocal m where
     readResource :: LocalPath -> m String
 
-instance External IO where
-    readResource (MkLocalPath pth) = readFile pth
+class (Monad m) => HasMenu m where
+    getMenu :: m U.Html
 
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
@@ -273,24 +275,25 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
     Left err -> fail $ show err
     Right page -> return page
 
-interpretMarkLight :: External m => Page -> m U.Html
+interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m U.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
     blocks <- renderLightBlock lightblock
-    return $ generatePageHeader pageinfo blocks
+    generatePageHeader pageinfo blocks
 
-generatePageHeader :: PageInformation -> U.Html -> U.Html
-generatePageHeader pageinfo bdy = U.page (renderTitle pageinfo) $
-    renderMenu pageinfo <> U.pageTitle (renderTitle pageinfo) <> bdy
+generatePageHeader :: HasMenu m => PageInformation -> U.Html -> m U.Html
+generatePageHeader pageinfo bdy = do
+    menu <- renderMenu pageinfo
+    return $ U.page (renderTitle pageinfo) $ menu <> U.pageTitle (renderTitle pageinfo) <> bdy
 
-renderMenu :: PageInformation -> U.Html
-renderMenu (MkPageInformation _ _ Nothing) = mempty
-renderMenu (MkPageInformation _ _ (Just (MkMenu False))) = mempty
-renderMenu (MkPageInformation _ _ (Just (MkMenu True))) = U.menuBlock
+renderMenu :: HasMenu m => PageInformation -> m U.Html
+renderMenu (MkPageInformation _ _ Nothing) = return $ mempty
+renderMenu (MkPageInformation _ _ (Just (MkMenu False))) = return $ mempty
+renderMenu (MkPageInformation _ _ (Just (MkMenu True))) = getMenu
 
 renderTitle :: PageInformation -> U.Html
 renderTitle (MkPageInformation (MkTitle title) _ _) = U.toHtml title
 
-renderLightBlock :: External m => LightBlock -> m U.Html
+renderLightBlock :: ReadLocal m => LightBlock -> m U.Html
 renderLightBlock (Header las) = return $ U.headline (renderLightAtomList las)
 renderLightBlock (Plain lbs) = mconcat <$> traverse renderLightBlock lbs
 renderLightBlock (Para las) = return $ U.p $ (renderLightAtomList las)
