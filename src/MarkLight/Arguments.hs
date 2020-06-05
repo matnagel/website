@@ -40,10 +40,11 @@ import qualified Utils as U
 import Prelude hiding (div, head, id)
 
 
-newtype Value = MkValue String
+data Value = MkValue String | MkBool Bool
 
 instance Show Value where
     show (MkValue str) = show str
+    show (MkBool a) = show a
 
 class IsValue a where
     fromValue :: MonadFail m => Value -> m a
@@ -96,6 +97,13 @@ quote p = tokenize $ between (char '\"') (charToken '\"') p
 parseArgument :: Parser Arguments
 parseArgument = tokenize $ do
   key <- keyletters
+  (parseSetValue key) <|> (return $ setKeyPresent key)
+
+setKeyPresent :: String -> Arguments
+setKeyPresent key = MkArguments $ M.singleton key (MkBool True)
+
+parseSetValue :: String -> Parser Arguments
+parseSetValue key = do
   charToken '='
   value <- MkValue <$> quote valueLetters
   return $ MkArguments $ M.singleton key value

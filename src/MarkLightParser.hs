@@ -58,7 +58,8 @@ newtype Text = MkText String deriving (Eq, Show)
 
 newtype CSSID = MkID String deriving (Eq, Show)
 
-newtype MenuInformation = MkMenu Bool deriving Show
+newtype MenuInformation = MkMenuInfo Bool deriving Show
+newtype MenuRegistration = MkMenuRegister Bool deriving Show
 
 instance IsValue URLPath where
     fromValue (MkValue val) = return $ MkURLPath val
@@ -82,15 +83,24 @@ instance IsValue Author where
     fromValue (MkValue val) = return $ MkAuthor val
 
 instance IsValue MenuInformation where
-    fromValue (MkValue "true") = return $ MkMenu True
-    fromValue (MkValue "false") = return $ MkMenu False
+    fromValue (MkValue "true") = return $ MkMenuInfo True
+    fromValue (MkValue "false") = return $ MkMenuInfo False
+    fromValue (MkBool a) = return $ MkMenuInfo a
     fromValue (MkValue _) = fail "MenuInformation needs to be either true or false"
+
+instance IsValue MenuRegistration where
+    fromValue (MkValue "true") = return $ MkMenuRegister True
+    fromValue (MkValue "false") = return $ MkMenuRegister False
+    fromValue (MkBool a) = return $ MkMenuRegister a
+    fromValue (MkValue _) = fail "MenuInformation needs to be either true or false"
+
 
 class (Monad m) => ReadLocal m where
     readResource :: LocalPath -> m String
 
 class (Monad m) => HasMenu m where
     getMenu :: m U.Html
+    registerMenu :: Title -> TargetPath -> m ()
 
 data FileSource = MkFileSource LocalPath String deriving (Show)
 
@@ -123,7 +133,12 @@ instance Semigroup LightBlock where
 instance Monoid LightBlock where
   mempty = Plain []
 
-data PageInformation = MkPageInformation Title TargetPath (Maybe MenuInformation) deriving (Show)
+data PageInformation = MkPageInformation {
+    getPageTitle :: Title,
+    getPagePath :: TargetPath,
+    getMenuInformation :: (Maybe MenuInformation),
+    getMenuRegistration :: (Maybe MenuRegistration)
+    } deriving (Show)
 
 data Page = MkPage PageInformation LightBlock deriving (Show)
 
@@ -185,7 +200,8 @@ parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
   opts <- parseArgumentsWithDefaults ["path","title"]
   MkPageInformation <$> getArgument "title" opts
     <*> getArgument "path" opts
-    <*> getOptionalArgument "menu" opts
+    <*> getOptionalArgument "addMenu" opts
+    <*> getOptionalArgument "registerMenu" opts
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ do
@@ -278,20 +294,26 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m U.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
     blocks <- renderLightBlock lightblock
+    registerInMenu pageinfo
     generatePageHeader pageinfo blocks
+
+registerInMenu :: (HasMenu m) => PageInformation -> m ()
+registerInMenu pi = return ()
 
 generatePageHeader :: HasMenu m => PageInformation -> U.Html -> m U.Html
 generatePageHeader pageinfo bdy = do
     menu <- renderMenu pageinfo
-    return $ U.page (renderTitle pageinfo) $ menu <> U.pageTitle (renderTitle pageinfo) <> bdy
+    return $ U.page (renderPageTitle pageinfo) $ menu <> U.pageTitle (renderPageTitle pageinfo) <> bdy
 
 renderMenu :: HasMenu m => PageInformation -> m U.Html
-renderMenu (MkPageInformation _ _ Nothing) = return $ mempty
-renderMenu (MkPageInformation _ _ (Just (MkMenu False))) = return $ mempty
-renderMenu (MkPageInformation _ _ (Just (MkMenu True))) = getMenu
+renderMenu pi = case getMenuInformation pi of
+    Nothing -> return $ mempty
+    Just (MkMenuInfo False) -> return $ mempty
+    Just (MkMenuInfo True) -> getMenu
 
-renderTitle :: PageInformation -> U.Html
-renderTitle (MkPageInformation (MkTitle title) _ _) = U.toHtml title
+renderPageTitle :: PageInformation -> U.Html
+renderPageTitle pi = case getPageTitle pi of
+    MkTitle title -> U.toHtml title
 
 renderLightBlock :: ReadLocal m => LightBlock -> m U.Html
 renderLightBlock (Header las) = return $ U.headline (renderLightAtomList las)

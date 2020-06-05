@@ -110,6 +110,10 @@ testArguments = TestLabel "Tests argument" $
           "Necessary second argument is not named."
           "id=\"tag\", name=\"me\", url=\"www.bla\""
           "url=\"www.bla\" \"me\", id=\"tag\"",
+        cArguments
+          "Setting key present"
+          "id=True"
+          "id",
         cMissingArguments
           "Not all arguments present"
           "\"me\", id=\"tag\""
