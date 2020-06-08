@@ -28,7 +28,8 @@ divClass,
 div,
 (!),
 style,
-(<>)
+(<>),
+MenuEntry(..)
 ) where
 
 import Prelude hiding (head, div, id)
@@ -39,6 +40,8 @@ import qualified Text.Blaze.Html5.Attributes as A
 
 import Data.String
 import Data.Monoid
+
+data MenuEntry = MkMenuEntry String String
 
 style = A.style
 pre = H.pre

@@ -2,6 +2,7 @@
 
 module Main where
 
+import Control.Monad.Trans.State.Lazy
 import Text.Blaze.Html.Renderer.String
 import GHC.IO.Encoding
 import MyContent
@@ -12,11 +13,16 @@ import MarkLightParser
 
 import Data.Time.Clock
 
+data EnvData = MkEnvData { getMenuEntries :: [U.MenuEntry] }
+
+type EnvM = StateT EnvData IO
+
 instance ReadLocal IO where
     readResource (MkLocalPath pth) = readFile pth
 
 instance HasMenu IO where
     getMenu = return $ U.menuBlock
+    registerMenu title path = return $ ()
 
 loadMarkLight :: String -> IO Page
 loadMarkLight path = do

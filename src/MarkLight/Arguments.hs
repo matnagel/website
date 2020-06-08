@@ -39,15 +39,13 @@ import Text.Parsec.String
 import qualified Utils as U
 import Prelude hiding (div, head, id)
 
+import MarkLight.Types
 
-data Value = MkValue String | MkBool Bool
 
-instance Show Value where
-    show (MkValue str) = show str
-    show (MkBool a) = show a
+-- data Value = MkValue String | MkBool Bool
 
-class IsValue a where
-    fromValue :: MonadFail m => Value -> m a
+-- class IsValue a where
+--     fromValue :: MonadFail m => Value -> m a
 
 newtype Arguments = MkArguments (M.Map String Value)
 
