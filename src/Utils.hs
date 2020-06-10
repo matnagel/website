@@ -10,6 +10,7 @@ page,
 link,
 homework,
 menuBlock,
+menuBlockFromList,
 mathjax,
 headline,
 pageTitle,
@@ -29,7 +30,8 @@ div,
 (!),
 style,
 (<>),
-MenuEntry(..)
+MenuEntry(..),
+HasMenu(..)
 ) where
 
 import Prelude hiding (head, div, id)
@@ -38,10 +40,18 @@ import Text.Blaze.Html5 ( (!), Html )
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
+import MarkLight.Types
+
 import Data.String
 import Data.Monoid
 
-data MenuEntry = MkMenuEntry String String
+class (Monad m) => HasMenu m where
+  getMenu :: m Html
+  registerMenu :: MenuEntry -> m ()
+
+data MenuEntry = MkMenuEntry TargetPath Title
+
+renderMenuEntry (MkMenuEntry (MkTargetPath url) (MkTitle name)) = link url name
 
 style = A.style
 pre = H.pre
@@ -103,13 +113,23 @@ mathjax = do
     ! A.src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML"
     $ mempty
 
-menuBlock = do
-        divId "menu" $ do
-            divId "logo" $ do
-                link "./index.html" $ "Home"
-            divId "navigation" $ do
-                link "./teaching.html" $ "Teaching"
-                link "./publications.html" $ "Publications"
-                link "./misc.html" $ "Misc"
+-- menuBlock = do
+--         divId "menu" $ do
+--             divId "logo" $ do
+--                 link "./index.html" $ "Home"
+--             divId "navigation" $ do
+--                 link "./teaching.html" $ "Teaching"
+--                 link "./publications.html" $ "Publications"
+--                 link "./misc.html" $ "Misc"
+
+menuBlock = menuBlockFromList [
+    MkMenuEntry "./teaching.html" "Teaching",
+    MkMenuEntry "./publications.html" "Publications",
+    MkMenuEntry "./misc.html" "Misc"]
+
+menuBlockFromList :: [MenuEntry] -> Html
+menuBlockFromList xs = divId "menu" $
+    (divId "logo" $ link "./index.html" $ "Home")
+    <> (divId "navigation" $ mconcat (renderMenuEntry <$> xs))
 
 storageETH x = fromString $ "https://people.math.ethz.ch/~managel/website/" ++ x

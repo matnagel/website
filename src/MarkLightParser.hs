@@ -10,8 +10,7 @@ module MarkLightParser
     parseParagraph,
     parseLink,
     parseArguments,
-    ReadLocal(..),
-    HasMenu(..)
+    ReadLocal(..)
   )
 where
 
@@ -39,6 +38,7 @@ import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec.String
 import qualified Utils as U
+import Utils (HasMenu(..))
 import qualified BibliographyGenerator as BG
 import Prelude hiding (div, head, id)
 
@@ -202,7 +202,7 @@ interpretMarkLight (MkPage pageinfo lightblock) = do
     generatePageHeader pageinfo blocks
 
 registerInMenu :: (HasMenu m) => PageInformation -> m ()
-registerInMenu pi = registerMenu (getPageTitle pi) (getPagePath pi)
+registerInMenu pi = registerMenu $ U.MkMenuEntry (getPagePath pi) (getPageTitle pi)
 
 generatePageHeader :: HasMenu m => PageInformation -> U.Html -> m U.Html
 generatePageHeader pageinfo bdy = do
