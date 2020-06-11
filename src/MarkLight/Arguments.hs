@@ -36,7 +36,6 @@ import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec.String
-import qualified Utils as U
 import Prelude hiding (div, head, id)
 
 import MarkLight.Types

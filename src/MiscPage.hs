@@ -4,7 +4,7 @@ module MiscPage (
 miscPage
 ) where
 
-import Utils
+import HtmlInterface
 
 miscPage :: Html
 miscPage = page "Miscellaneous" $ do

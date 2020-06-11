@@ -16,7 +16,7 @@ import CoursePages (algTopPage, geoTopPage)
 import TopologySeminar (topSemPage)
 import MiscPage (miscPage)
 import TeachingPage
-import Utils
+import HtmlInterface
 
 publicationPage bib = page "Publications"
     $ menuBlock

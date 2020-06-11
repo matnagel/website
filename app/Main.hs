@@ -12,14 +12,14 @@ import GHC.IO.Encoding
 import Data.String
 import MyContent
 
-import qualified Utils as U
-import Utils(HasMenu(..))
+import qualified HtmlInterface as HI
+import HtmlInterface(HasMenu(..))
 
 import MarkLightParser
 
 import Data.Time.Clock
 
-data Capsule = MkCapsule { getMenuEntries :: [U.MenuEntry] }
+data Capsule = MkCapsule { getMenuEntries :: [HI.MenuEntry] }
 
 data ReverseStateM m s a = MkReverseStateM (s -> m (s, a))
 
@@ -65,7 +65,7 @@ instance ReadLocal IO where
     readResource (MkLocalPath pth) = readFile pth
 
 instance HasMenu IO where
-    getMenu = return $ U.menuBlock
+    getMenu = return $ HI.menuBlock
     registerMenu _ = return $ ()
 
 instance WriteLocal IO where
@@ -78,7 +78,7 @@ instance WriteLocal ComputeM where
     writeResource (MkLocalPath path) cont = lift $ writeFile path cont
 
 instance HasMenu ComputeM where
-    getMenu = return $ U.menuBlock
+    getMenu = return $ HI.menuBlock
     registerMenu _ = undefined
 
 instance ReadLocal ComputeM where

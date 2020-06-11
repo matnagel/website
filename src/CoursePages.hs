@@ -6,7 +6,7 @@ geoTopPage
 ) where
 
 import Prelude hiding (head, div, id)
-import Utils
+import HtmlInterface
 
 geoTopPage = page "Introduction to 3-manifolds" (
     h1 "Introduction to 3-manifolds"

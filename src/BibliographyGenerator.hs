@@ -13,7 +13,7 @@ import Control.Applicative ( (<*>), (<$>) )
 import Data.Monoid ( mconcat, (<>), mempty )
 import Control.Monad ( mzero, msum )
 import Data.Traversable
-import Utils
+import HtmlInterface
 import Utility.Separators
 
 data Journal = Journal { jname::String,

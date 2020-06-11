@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Utils (
+module HtmlInterface (
 addheader,
 rightPicture,
 flex,

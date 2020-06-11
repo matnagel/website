@@ -5,7 +5,7 @@ teachingPage
 ) where
 
 import Prelude hiding (div)
-import Utils
+import HtmlInterface
 
 eth19mfds = headline "ETH / Introduction to 3-manifolds"
     <> p "An introduction to the basic notions and tools of geometric topology with a special focus on three dimensional manifolds."

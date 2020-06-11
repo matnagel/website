@@ -37,8 +37,8 @@ import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec.String
-import qualified Utils as U
-import Utils (HasMenu(..))
+import qualified HtmlInterface as HI
+import HtmlInterface (HasMenu(..))
 import qualified BibliographyGenerator as BG
 import Prelude hiding (div, head, id)
 
@@ -195,51 +195,51 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
     Left err -> fail $ show err
     Right page -> return page
 
-interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m U.Html
+interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m HI.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
     blocks <- renderLightBlock lightblock
     registerInMenu pageinfo
     generatePageHeader pageinfo blocks
 
 registerInMenu :: (HasMenu m) => PageInformation -> m ()
-registerInMenu pi = registerMenu $ U.MkMenuEntry (getPagePath pi) (getPageTitle pi)
+registerInMenu pi = registerMenu $ HI.MkMenuEntry (getPagePath pi) (getPageTitle pi)
 
-generatePageHeader :: HasMenu m => PageInformation -> U.Html -> m U.Html
+generatePageHeader :: HasMenu m => PageInformation -> HI.Html -> m HI.Html
 generatePageHeader pageinfo bdy = do
     menu <- renderMenu pageinfo
-    return $ U.page (renderPageTitle pageinfo) $ menu <> U.pageTitle (renderPageTitle pageinfo) <> bdy
+    return $ HI.page (renderPageTitle pageinfo) $ menu <> HI.pageTitle (renderPageTitle pageinfo) <> bdy
 
-renderMenu :: HasMenu m => PageInformation -> m U.Html
+renderMenu :: HasMenu m => PageInformation -> m HI.Html
 renderMenu pi = case getMenuInformation pi of
     Nothing -> return $ mempty
     Just (MkMenuInfo False) -> return $ mempty
     Just (MkMenuInfo True) -> getMenu
 
-renderPageTitle :: PageInformation -> U.Html
+renderPageTitle :: PageInformation -> HI.Html
 renderPageTitle pi = case getPageTitle pi of
-    MkTitle title -> U.toHtml title
+    MkTitle title -> HI.toHtml title
 
-renderLightBlock :: ReadLocal m => LightBlock -> m U.Html
-renderLightBlock (Header las) = return $ U.headline (renderLightAtomList las)
+renderLightBlock :: ReadLocal m => LightBlock -> m HI.Html
+renderLightBlock (Header las) = return $ HI.headline (renderLightAtomList las)
 renderLightBlock (Plain lbs) = mconcat <$> traverse renderLightBlock lbs
-renderLightBlock (Para las) = return $ U.p $ (renderLightAtomList las)
+renderLightBlock (Para las) = return $ HI.p $ (renderLightAtomList las)
 renderLightBlock (Direct las) = return $ renderLightAtomList las
 renderLightBlock (Enumeration las) = do
     blocks <- traverse renderLightBlock las
-    return $ U.ul $ mconcat $ U.li <$> blocks
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id)) = return $ U.image path title id
+    return $ HI.ul $ mconcat $ HI.li <$> blocks
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id)) = return $ HI.image path title id
 renderLightBlock Comment = return $ mempty
 renderLightBlock (PublicationList path) = do
     bib <- readResource path
     return $ BG.generateBibliography bib
 
-renderLightAtomList :: [LightAtom] -> U.Html
+renderLightAtomList :: [LightAtom] -> HI.Html
 renderLightAtomList las = mconcat $ renderLightAtom <$> las
 
-renderLightAtom :: LightAtom -> U.Html
-renderLightAtom (Word str) = U.toHtml str
-renderLightAtom (Link (MkURLPath path) (MkText txt)) = U.link path txt
-renderLightAtom Space = U.toHtml (" " :: String)
-renderLightAtom Newline = U.br
-renderLightAtom (Book (MkTitle title) (MkAuthor author) Nothing) = (U.em $ U.toHtml $ title) <> (U.toHtml $ " by " ++ author)
-renderLightAtom (Book (MkTitle title) (MkAuthor author) (Just (MkURLPath path))) = (U.em $ U.link path title) <> (U.toHtml $ " by " ++ author)
+renderLightAtom :: LightAtom -> HI.Html
+renderLightAtom (Word str) = HI.toHtml str
+renderLightAtom (Link (MkURLPath path) (MkText txt)) = HI.link path txt
+renderLightAtom Space = HI.toHtml (" " :: String)
+renderLightAtom Newline = HI.br
+renderLightAtom (Book (MkTitle title) (MkAuthor author) Nothing) = (HI.em $ HI.toHtml $ title) <> (HI.toHtml $ " by " ++ author)
+renderLightAtom (Book (MkTitle title) (MkAuthor author) (Just (MkURLPath path))) = (HI.em $ HI.link path title) <> (HI.toHtml $ " by " ++ author)

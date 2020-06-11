@@ -5,7 +5,7 @@ topSemPage
 ) where
 
 import Data.Time.Calendar
-import Utils
+import HtmlInterface
 import Utility.Seminars
 
 drellichTalk18 = Talk (day 2018 10 18)
