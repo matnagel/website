@@ -10,7 +10,8 @@ module MarkLightParser
     parseParagraph,
     parseLink,
     parseArguments,
-    ReadLocal(..)
+    ReadLocal(..),
+    WriteLocal(..)
   )
 where
 
@@ -64,10 +65,10 @@ ensureStartOfLine = do
   pos <- getPosition
   guard (sourceColumn pos == 1)
 
-preventStartOfLine :: Monad m => ParsecT s u m ()
-preventStartOfLine = do
-  pos <- getPosition
-  guard (sourceColumn pos /= 1)
+--preventStartOfLine :: Monad m => ParsecT s u m ()
+--preventStartOfLine = do
+--  pos <- getPosition
+--  guard (sourceColumn pos /= 1)
 
 blank = char ' '
 nonNewlineSpace = blank <|> tab
@@ -198,22 +199,20 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m HI.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
     blocks <- renderLightBlock lightblock
-    registerInMenu pageinfo
+    registerMenu $ HI.MkMenuEntry (getPagePath pageinfo) (getPageTitle pageinfo)
     generatePageHeader pageinfo blocks
-
-registerInMenu :: (HasMenu m) => PageInformation -> m ()
-registerInMenu pi = registerMenu $ HI.MkMenuEntry (getPagePath pi) (getPageTitle pi)
 
 generatePageHeader :: HasMenu m => PageInformation -> HI.Html -> m HI.Html
 generatePageHeader pageinfo bdy = do
     menu <- renderMenu pageinfo
-    return $ HI.page (renderPageTitle pageinfo) $ menu <> HI.pageTitle (renderPageTitle pageinfo) <> bdy
+    return $ HI.page (renderPageTitle pageinfo) $ menu
+        <> HI.pageTitle (renderPageTitle pageinfo) <> bdy
 
 renderMenu :: HasMenu m => PageInformation -> m HI.Html
-renderMenu pi = case getMenuInformation pi of
+renderMenu pi = case getFlagIncludesMenu pi of
     Nothing -> return $ mempty
-    Just (MkMenuInfo False) -> return $ mempty
-    Just (MkMenuInfo True) -> getMenu
+    Just (MkIncMenuFlag False) -> return $ mempty
+    Just (MkIncMenuFlag True) -> getMenu
 
 renderPageTitle :: PageInformation -> HI.Html
 renderPageTitle pi = case getPageTitle pi of

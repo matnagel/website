@@ -1,4 +1,4 @@
-{page title="Miscellaneous" path="output/misc.html", addMenu}
+{page title="Miscellaneous" path="misc.html", addMenu}
 
 = Seminars
 

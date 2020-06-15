@@ -8,16 +8,15 @@ module MarkLight.Types
     Author (..),
     Text (..),
     CSSID (..),
-    MenuInformation (..),
-    MenuRegistration (..),
-    FileSource (..),
     ReadLocal (..),
+    WriteLocal (..),
     IsValue (..),
     Value (..),
     LightAtom (..),
     LightBlock (..),
     PageInformation (..),
     Page (..),
+    FlagIncludesMenu(..)
   )
 where
 
@@ -25,8 +24,6 @@ import Control.Monad
 import Data.String
 import qualified Data.Map as M
 import Optics
--- import qualified Text.Parsec as P
--- import qualified Utils as U
 import Prelude hiding (div, head, id)
 
 data Value = MkValue String | MkBool Bool
@@ -42,6 +39,9 @@ newtype URLPath = MkURLPath String deriving (Eq, Show)
 
 newtype LocalPath = MkLocalPath String deriving (Eq, Show)
 
+instance IsString LocalPath where
+    fromString path = MkLocalPath path
+
 newtype TargetPath = MkTargetPath String deriving (Show)
 
 newtype Title = MkTitle String deriving (Eq, Show)
@@ -52,11 +52,8 @@ newtype Text = MkText String deriving (Eq, Show)
 
 newtype CSSID = MkID String deriving (Eq, Show)
 
-newtype MenuInformation = MkMenuInfo Bool deriving (Show)
-
-newtype MenuRegistration = MkMenuRegister Bool deriving (Show)
-
-data FileSource = MkFileSource LocalPath String deriving (Show)
+newtype FlagIncludesMenu = MkIncMenuFlag Bool deriving (Eq, Show)
+newtype FlagAddMenuEntry = MkAddMenuFlag Bool deriving (Eq, Show)
 
 data LightAtom
   = Word String
@@ -90,12 +87,14 @@ instance Monoid LightBlock where
 data PageInformation = MkPageInformation
   { getPageTitle :: Title,
     getPagePath :: TargetPath,
-    getMenuInformation :: (Maybe MenuInformation),
-    getMenuRegistration :: (Maybe MenuRegistration)
+    getFlagIncludesMenu :: (Maybe FlagIncludesMenu),
+    getFlagAddsEntry :: (Maybe FlagAddMenuEntry)
   }
   deriving (Show)
 
-data Page = MkPage PageInformation LightBlock deriving (Show)
+data Page = MkPage
+    { getPageMetadata :: PageInformation,
+      getContent :: LightBlock } deriving (Show)
 
 instance IsValue URLPath where
   fromValue (MkValue val) = return $ MkURLPath val
@@ -115,7 +114,6 @@ instance IsValue TargetPath where
 instance IsString TargetPath where
   fromString str = MkTargetPath str
 
-
 instance IsValue Text where
   fromValue (MkValue val) = return $ MkText val
 
@@ -125,17 +123,21 @@ instance IsValue CSSID where
 instance IsValue Author where
   fromValue (MkValue val) = return $ MkAuthor val
 
-instance IsValue MenuInformation where
-  fromValue (MkValue "true") = return $ MkMenuInfo True
-  fromValue (MkValue "false") = return $ MkMenuInfo False
-  fromValue (MkBool a) = return $ MkMenuInfo a
-  fromValue (MkValue _) = fail "MenuInformation needs to be either true or false"
+instance IsValue FlagIncludesMenu where
+  fromValue (MkValue "true") = return $ MkIncMenuFlag True
+  fromValue (MkValue "false") = return $ MkIncMenuFlag False
+  fromValue (MkBool a) = return $ MkIncMenuFlag a
+  fromValue (MkValue _) = fail "Flag IncludesMenu needs to be either true or false"
 
-instance IsValue MenuRegistration where
-  fromValue (MkValue "true") = return $ MkMenuRegister True
-  fromValue (MkValue "false") = return $ MkMenuRegister False
-  fromValue (MkBool a) = return $ MkMenuRegister a
-  fromValue (MkValue _) = fail "MenuRegistration needs to be either true or false"
+instance IsValue FlagAddMenuEntry where
+  fromValue (MkValue "true") = return $ MkAddMenuFlag True
+  fromValue (MkValue "false") = return $ MkAddMenuFlag False
+  fromValue (MkBool a) = return $ MkAddMenuFlag a
+  fromValue (MkValue _) = fail "Flag AddMenu needs to be either true or false"
 
 class (Monad m) => ReadLocal m where
   readResource :: LocalPath -> m String
+
+class (Monad m) => WriteLocal m where
+    writeResource :: LocalPath -> String -> m ()
+

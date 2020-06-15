@@ -25,7 +25,7 @@ dependencies:
 - containers
 - HUnit
 - optics
-- transformers
+- mtl
 
 library:
   source-dirs: src
