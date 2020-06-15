@@ -102,7 +102,7 @@ optionalSepBy sep p = do
 
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
-  opts <- parseArgumentsWithDefaults ["path","title"]
+  opts <- parseArgumentsWithDefaults ["path", "title", "addMenu", "registerMenu"] ["path","title"]
   MkPageInformation <$> getArgument "title" opts
     <*> getArgument "path" opts
     <*> getArgumentWithDefault "addMenu" (MkIncMenuFlag False) opts
@@ -110,14 +110,14 @@ parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ do
-    opts <- parseArgumentsWithDefaults ["path", "text"]
+    opts <- parseArgumentsWithDefaults ["path", "title"] ["path", "text"]
     Link <$> (getArgument "path" opts)
          <*> (getArgument "text" opts)
 
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ do
-  opts <- parseArgumentsWithDefaults ["title", "author"]
+  opts <- parseArgumentsWithDefaults ["path", "title", "link"] ["title", "author"]
   case Book
     <$> (getArgument "title" opts)
     <*> (getArgument "author" opts)
@@ -127,14 +127,14 @@ parseBook = braceCommand "book" $ do
 
 parsePicture :: Parser LightBlock
 parsePicture = ensureStartOfLine *> (tokenizeBlock $ braceCommand "picture" $ do
-  opts <- parseArgumentsWithDefaults ["path", "title", "id"]
+  opts <- parseArgumentsWithDefaults ["path", "title", "id"] ["path", "title", "id"]
   Picture <$> (getArgument "path" opts)
     <*> (getArgument "title" opts)
     <*> (getArgument "id" opts))
 
 parsePublicationList :: Parser LightBlock
 parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications" $ do
-  opts <- parseArgumentsWithDefaults ["path"]
+  opts <- parseArgumentsWithDefaults ["path"] ["path"]
   PublicationList <$> (getArgument "path" opts))
 
 parseHeader :: Parser LightBlock

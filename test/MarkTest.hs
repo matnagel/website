@@ -116,10 +116,15 @@ testArguments = TestLabel "Tests argument" $
           "id",
         cMissingArguments
           "Not all arguments present"
-          "\"me\", id=\"tag\""
+          "\"me\", id=\"tag\"",
+        cUnknownArguments
+          "Not all arguments present"
+          "id=\"tag\""
+
       ]
   where
-    cArguments = createParseTest parseArguments
-    cDefaultArguments = createParseTest $ parseArgumentsWithDefaults ["url", "name"]
-    cMissingArguments = createParseFailTest $ parseArgumentsWithDefaults ["url", "name"]
+    cArguments = createParseTest $ parseArguments ["url", "name", "id", "opt"]
+    cDefaultArguments = createParseTest $ parseArgumentsWithDefaults ["url", "name", "id"] ["url", "name"]
+    cMissingArguments = createParseFailTest $ parseArgumentsWithDefaults ["url", "name", "id"] ["url", "name"]
+    cUnknownArguments = createParseFailTest $ parseArguments []
 

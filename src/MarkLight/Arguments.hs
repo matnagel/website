@@ -86,10 +86,12 @@ instance Show Arguments where
 
 quote p = tokenize $ between (char '\"') (charToken '\"') p
 
-parseArgument :: Parser Arguments
-parseArgument = tokenize $ do
+parseArgument :: [String] -> Parser Arguments
+parseArgument allowedkey = tokenize $ do
   key <- keyletters
-  (parseSetValue key) <|> (return $ setKeyPresent key)
+  if notElem key allowedkey
+    then fail $ "Unknown key: " ++ key
+    else (parseSetValue key) <|> (return $ setKeyPresent key)
 
 setKeyPresent :: String -> Arguments
 setKeyPresent key = MkArguments $ M.singleton key (MkBool True)
@@ -105,10 +107,10 @@ parseUnassignedArgument = tokenize $ do
     value <- MkValue <$> quote valueLetters
     return $ MkAcc [value] mempty
 
-parseAccumulateArguments :: Parser AccumulateArguments
-parseAccumulateArguments = tokenize $ do
+parseAccumulateArguments :: [String] -> Parser AccumulateArguments
+parseAccumulateArguments allowedkeys = tokenize $ do
     opts <- sepBy (parseUnassignedArgument
-                    <|> (MkAcc [] <$> parseArgument)) $ optional (charToken ',')
+                    <|> (MkAcc [] <$> parseArgument allowedkeys)) $ optional (charToken ',')
     return $ mconcat opts
 
 isArgumentPresent :: MonadFail m => Arguments -> String -> m ()
@@ -116,10 +118,10 @@ isArgumentPresent (MkArguments arg) key = case M.member key arg of
     True -> return $ ()
     False -> fail $ "Argument error: Key " ++ key ++ "=\"..\" is missing."
 
-parseArgumentsWithDefaults :: [String] -> Parser Arguments
-parseArgumentsWithDefaults keys = tokenize $ do
-    args <- addKeysWithDefaults keys <$> parseAccumulateArguments
-    foldr (*>) (return args) (isArgumentPresent args <$> keys)
+parseArgumentsWithDefaults :: [String] -> [String] -> Parser Arguments
+parseArgumentsWithDefaults allowedkeys defaultkeys = tokenize $ do
+    args <- addKeysWithDefaults defaultkeys <$> parseAccumulateArguments allowedkeys
+    foldr (*>) (return args) (isArgumentPresent args <$> defaultkeys)
 
 addKeysWithDefaults :: [String] -> AccumulateArguments -> Arguments
 addKeysWithDefaults [] (MkAcc _ args) = args
@@ -128,8 +130,8 @@ addKeysWithDefaults (k:ks) aa@(MkAcc (v:vs) args) = if (M.notMember k $ view arg
     then addKeysWithDefaults ks (MkAcc vs $ over argumentsOptic (M.insert k v) args)
     else addKeysWithDefaults ks aa
 
-parseArguments :: Parser Arguments
-parseArguments = parseArgumentsWithDefaults []
+parseArguments :: [String] -> Parser Arguments
+parseArguments alloweds = parseArgumentsWithDefaults alloweds []
 
 getArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m a
 getArgument str (MkArguments mp) = case M.lookup str mp of
