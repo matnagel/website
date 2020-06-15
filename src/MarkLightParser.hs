@@ -105,8 +105,8 @@ parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
   opts <- parseArgumentsWithDefaults ["path","title"]
   MkPageInformation <$> getArgument "title" opts
     <*> getArgument "path" opts
-    <*> getOptionalArgument "addMenu" opts
-    <*> getOptionalArgument "registerMenu" opts
+    <*> getArgumentWithDefault "addMenu" (MkIncMenuFlag False) opts
+    <*> getArgumentWithDefault "registerMenu" (MkRegisterMenuEntryFlag False) opts
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ do
@@ -199,8 +199,14 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m HI.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
     blocks <- renderLightBlock lightblock
-    registerMenu $ HI.MkMenuEntry (getPagePath pageinfo) (getPageTitle pageinfo)
+    checkAndRegisterMenuEntry pageinfo
     generatePageHeader pageinfo blocks
+
+checkAndRegisterMenuEntry :: (HasMenu m) => PageInformation -> m ()
+checkAndRegisterMenuEntry pageinfo = case getFlagAddEntry pageinfo of
+        (MkRegisterMenuEntryFlag False) -> return ()
+        (MkRegisterMenuEntryFlag True) -> registerMenu $
+            HI.MkMenuEntry (getPagePath pageinfo) (getPageTitle pageinfo)
 
 generatePageHeader :: HasMenu m => PageInformation -> HI.Html -> m HI.Html
 generatePageHeader pageinfo bdy = do
@@ -210,9 +216,8 @@ generatePageHeader pageinfo bdy = do
 
 renderMenu :: HasMenu m => PageInformation -> m HI.Html
 renderMenu pi = case getFlagIncludesMenu pi of
-    Nothing -> return $ mempty
-    Just (MkIncMenuFlag False) -> return $ mempty
-    Just (MkIncMenuFlag True) -> getMenu
+    (MkIncMenuFlag False) -> return $ mempty
+    (MkIncMenuFlag True) -> getMenu
 
 renderPageTitle :: PageInformation -> HI.Html
 renderPageTitle pi = case getPageTitle pi of

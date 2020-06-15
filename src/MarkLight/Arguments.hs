@@ -6,6 +6,7 @@ module MarkLight.Arguments
     Arguments,
     getArgument,
     getOptionalArgument,
+    getArgumentWithDefault,
     quote,
     Value(..),
     IsValue(..)
@@ -39,12 +40,6 @@ import Text.Parsec.String
 import Prelude hiding (div, head, id)
 
 import MarkLight.Types
-
-
--- data Value = MkValue String | MkBool Bool
-
--- class IsValue a where
---     fromValue :: MonadFail m => Value -> m a
 
 newtype Arguments = MkArguments (M.Map String Value)
 
@@ -145,3 +140,8 @@ getOptionalArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m (May
 getOptionalArgument str (MkArguments mp) = case M.lookup str mp of
     Nothing -> return $ Nothing
     Just val -> Just <$> fromValue val
+
+getArgumentWithDefault :: (IsValue a, MonadFail m) => String -> a -> Arguments -> m a
+getArgumentWithDefault str def (MkArguments mp) = case M.lookup str mp of
+    Nothing -> return $ def
+    Just val -> fromValue val

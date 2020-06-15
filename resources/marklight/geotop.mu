@@ -1,4 +1,4 @@
-{page path="geotop.html", title="Introduction to 3-manifolds" }
+{page path="geotop.html", title="Introduction to 3-manifolds"}
 
 {picture "https://people.math.ethz.ch/~managel/website/images/braid.jpg" "A braid" id="braid"}
 

@@ -18,19 +18,25 @@ import Interpretation.ConstructEnvInt
 import Interpretation.RunEnvInt
 
 import MarkLightParser
+import MarkLight.Types
 
 import Data.Time.Clock
+import System.FilePath
+
+
+outputFolder = "output/" :: FilePath
 
 loadMarkLight :: (ReadLocal m, MonadFail m) => LocalPath -> m Page
 loadMarkLight path = do
     cont <- readResource path
     parseMarkLight path cont
 
-runMarkLight :: (ReadLocal m, MonadFail m, HasMenu m, WriteLocal m) => LocalPath -> LocalPath -> m ()
-runMarkLight input output = do
+runMarkLight :: (ReadLocal m, MonadFail m, HasMenu m, WriteLocal m) => LocalPath -> m ()
+runMarkLight input = do
     page <- loadMarkLight input
-    html <- interpretMarkLight $ page
-    writeResource output $ renderHtml html
+    html <- interpretMarkLight page
+    let MkTargetPath output = (getPagePath . getPageMetadata) page
+    writeResource (MkLocalPath (outputFolder </> output)) $ renderHtml html
 
 website :: (ReadLocal m, MonadFail m, HasMenu m, WriteLocal m) => m ()
 website  = do
@@ -39,13 +45,13 @@ website  = do
    -- lift $ writeFile "output/index.html" $ renderHtml $ indexPage
    -- lift $ writeFile "output/teaching.html" $ renderHtml $ teachingPage
     -- writeFile "output/publications.html" $ renderHtml $ publicationPage bib
-    runMarkLight "resources/marklight/publications.mu" "output/publications.html"
+    runMarkLight "resources/marklight/publications.mu"
    -- lift $ writeFile "output/algtop.html" $ renderHtml $ algTopPage
    -- lift $ writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
     -- writeFile "output/misc.html" $ renderHtml $ miscPage
     -- writeFile "output/geotop.html" $ renderHtml $ geoTopPage
-    runMarkLight "resources/marklight/misc.mu" "output/misc.html"
-    runMarkLight "resources/marklight/geotop.mu" "output/geotop.html"
+    runMarkLight "resources/marklight/misc.mu"
+    runMarkLight "resources/marklight/geotop.mu"
 
 main :: IO ()
 main = do

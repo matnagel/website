@@ -16,7 +16,8 @@ module MarkLight.Types
     LightBlock (..),
     PageInformation (..),
     Page (..),
-    FlagIncludesMenu(..)
+    FlagIncludesMenu(..),
+    FlagRegisterMenuEntry(..)
   )
 where
 
@@ -53,7 +54,7 @@ newtype Text = MkText String deriving (Eq, Show)
 newtype CSSID = MkID String deriving (Eq, Show)
 
 newtype FlagIncludesMenu = MkIncMenuFlag Bool deriving (Eq, Show)
-newtype FlagAddMenuEntry = MkAddMenuFlag Bool deriving (Eq, Show)
+newtype FlagRegisterMenuEntry = MkRegisterMenuEntryFlag Bool deriving (Eq, Show)
 
 data LightAtom
   = Word String
@@ -87,8 +88,8 @@ instance Monoid LightBlock where
 data PageInformation = MkPageInformation
   { getPageTitle :: Title,
     getPagePath :: TargetPath,
-    getFlagIncludesMenu :: (Maybe FlagIncludesMenu),
-    getFlagAddsEntry :: (Maybe FlagAddMenuEntry)
+    getFlagIncludesMenu :: FlagIncludesMenu,
+    getFlagAddEntry :: FlagRegisterMenuEntry
   }
   deriving (Show)
 
@@ -129,10 +130,10 @@ instance IsValue FlagIncludesMenu where
   fromValue (MkBool a) = return $ MkIncMenuFlag a
   fromValue (MkValue _) = fail "Flag IncludesMenu needs to be either true or false"
 
-instance IsValue FlagAddMenuEntry where
-  fromValue (MkValue "true") = return $ MkAddMenuFlag True
-  fromValue (MkValue "false") = return $ MkAddMenuFlag False
-  fromValue (MkBool a) = return $ MkAddMenuFlag a
+instance IsValue FlagRegisterMenuEntry where
+  fromValue (MkValue "true") = return $ MkRegisterMenuEntryFlag True
+  fromValue (MkValue "false") = return $ MkRegisterMenuEntryFlag False
+  fromValue (MkBool a) = return $ MkRegisterMenuEntryFlag a
   fromValue (MkValue _) = fail "Flag AddMenu needs to be either true or false"
 
 class (Monad m) => ReadLocal m where
