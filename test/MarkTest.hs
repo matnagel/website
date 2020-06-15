@@ -123,8 +123,8 @@ testArguments = TestLabel "Tests argument" $
 
       ]
   where
-    cArguments = createParseTest $ parseArguments ["url", "name", "id", "opt"]
-    cDefaultArguments = createParseTest $ parseArgumentsWithDefaults ["url", "name", "id"] ["url", "name"]
-    cMissingArguments = createParseFailTest $ parseArgumentsWithDefaults ["url", "name", "id"] ["url", "name"]
-    cUnknownArguments = createParseFailTest $ parseArguments []
+    cArguments = createParseTest $ parseArguments (MkTotalKeys ["url", "name", "id", "opt"])
+    cDefaultArguments = createParseTest $ parseArgumentsWithDefaults (MkTotalKeys ["url", "name", "id"]) (MkPositionalKeys ["url", "name"])
+    cMissingArguments = createParseFailTest $ parseArgumentsWithDefaults (MkTotalKeys ["url", "name", "id"]) (MkPositionalKeys ["url", "name"])
+    cUnknownArguments = createParseFailTest $ parseArguments (MkTotalKeys [])
 

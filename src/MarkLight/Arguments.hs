@@ -9,7 +9,9 @@ module MarkLight.Arguments
     getArgumentWithDefault,
     quote,
     Value(..),
-    IsValue(..)
+    IsValue(..),
+    TotalKeys(..),
+    PositionalKeys(..)
   )
 where
 
@@ -31,7 +33,7 @@ import Text.Parsec
     space,
     spaces,
     string,
-    try,
+    try
   )
 import Text.Parsec.Char
 import Text.Parsec.Combinator
@@ -42,6 +44,10 @@ import Prelude hiding (div, head, id)
 import MarkLight.Types
 
 newtype Arguments = MkArguments (M.Map String Value)
+
+newtype TotalKeys = MkTotalKeys [String]
+
+newtype PositionalKeys = MkPositionalKeys [String]
 
 argumentsGetter :: Arguments -> M.Map String Value
 argumentsGetter (MkArguments arg) = arg
@@ -86,10 +92,10 @@ instance Show Arguments where
 
 quote p = tokenize $ between (char '\"') (charToken '\"') p
 
-parseArgument :: [String] -> Parser Arguments
-parseArgument allowedkey = tokenize $ do
+parseArgument :: TotalKeys -> Parser Arguments
+parseArgument (MkTotalKeys allowedKeys) = tokenize $ do
   key <- keyletters
-  if notElem key allowedkey
+  if notElem key allowedKeys
     then fail $ "Unknown key: " ++ key
     else (parseSetValue key) <|> (return $ setKeyPresent key)
 
@@ -107,10 +113,10 @@ parseUnassignedArgument = tokenize $ do
     value <- MkValue <$> quote valueLetters
     return $ MkAcc [value] mempty
 
-parseAccumulateArguments :: [String] -> Parser AccumulateArguments
-parseAccumulateArguments allowedkeys = tokenize $ do
+parseAccumulateArguments :: TotalKeys -> Parser AccumulateArguments
+parseAccumulateArguments allowedKeys = tokenize $ do
     opts <- sepBy (parseUnassignedArgument
-                    <|> (MkAcc [] <$> parseArgument allowedkeys)) $ optional (charToken ',')
+                    <|> (MkAcc [] <$> parseArgument allowedKeys)) $ optional (charToken ',')
     return $ mconcat opts
 
 isArgumentPresent :: MonadFail m => Arguments -> String -> m ()
@@ -118,20 +124,20 @@ isArgumentPresent (MkArguments arg) key = case M.member key arg of
     True -> return $ ()
     False -> fail $ "Argument error: Key " ++ key ++ "=\"..\" is missing."
 
-parseArgumentsWithDefaults :: [String] -> [String] -> Parser Arguments
-parseArgumentsWithDefaults allowedkeys defaultkeys = tokenize $ do
-    args <- addKeysWithDefaults defaultkeys <$> parseAccumulateArguments allowedkeys
-    foldr (*>) (return args) (isArgumentPresent args <$> defaultkeys)
+parseArgumentsWithDefaults :: TotalKeys -> PositionalKeys -> Parser Arguments
+parseArgumentsWithDefaults allowedKeys posKeys@(MkPositionalKeys posList) = tokenize $ do
+    args <- addKeysWithDefaults posKeys <$> parseAccumulateArguments allowedKeys
+    foldr (*>) (return args) (isArgumentPresent args <$> posList)
 
-addKeysWithDefaults :: [String] -> AccumulateArguments -> Arguments
-addKeysWithDefaults [] (MkAcc _ args) = args
+addKeysWithDefaults :: PositionalKeys -> AccumulateArguments -> Arguments
+addKeysWithDefaults (MkPositionalKeys []) (MkAcc _ args) = args
 addKeysWithDefaults _ (MkAcc [] args) = args
-addKeysWithDefaults (k:ks) aa@(MkAcc (v:vs) args) = if (M.notMember k $ view argumentsOptic args)
-    then addKeysWithDefaults ks (MkAcc vs $ over argumentsOptic (M.insert k v) args)
-    else addKeysWithDefaults ks aa
+addKeysWithDefaults (MkPositionalKeys (k:ks)) aa@(MkAcc (v:vs) args) = if (M.notMember k $ view argumentsOptic args)
+    then addKeysWithDefaults (MkPositionalKeys ks) (MkAcc vs $ over argumentsOptic (M.insert k v) args)
+    else addKeysWithDefaults (MkPositionalKeys ks) aa
 
-parseArguments :: [String] -> Parser Arguments
-parseArguments alloweds = parseArgumentsWithDefaults alloweds []
+parseArguments :: TotalKeys -> Parser Arguments
+parseArguments alloweds = parseArgumentsWithDefaults alloweds (MkPositionalKeys [])
 
 getArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m a
 getArgument str (MkArguments mp) = case M.lookup str mp of
