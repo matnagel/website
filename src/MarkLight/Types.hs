@@ -17,7 +17,8 @@ module MarkLight.Types
     PageInformation (..),
     Page (..),
     FlagIncludesMenu(..),
-    FlagRegisterMenuEntry(..)
+    FlagRegisterMenuEntry(..),
+    Style (..)
   )
 where
 
@@ -56,6 +57,8 @@ newtype CSSID = MkID String deriving (Eq, Show)
 newtype FlagIncludesMenu = MkIncMenuFlag Bool deriving (Eq, Show)
 newtype FlagRegisterMenuEntry = MkRegisterMenuEntryFlag Bool deriving (Eq, Show)
 
+data Style = NoStyle | StyleCentered deriving (Eq, Show)
+
 data LightAtom
   = Word String
   | Newline
@@ -71,7 +74,7 @@ data LightBlock
   | Direct [LightAtom]
   | Header [LightAtom]
   | Enumeration [LightBlock]
-  | Picture URLPath Title CSSID
+  | Picture URLPath Title CSSID Style
   | PublicationList LocalPath
   | Comment
   deriving (Eq, Show)
@@ -123,6 +126,11 @@ instance IsValue CSSID where
 
 instance IsValue Author where
   fromValue (MkValue val) = return $ MkAuthor val
+
+instance IsValue Style where
+  fromValue (MkValue "centered") = return $ StyleCentered
+  fromValue _ = fail "Unknown Style"
+
 
 instance IsValue FlagIncludesMenu where
   fromValue (MkValue "true") = return $ MkIncMenuFlag True

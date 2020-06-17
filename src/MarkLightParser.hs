@@ -46,10 +46,9 @@ import Prelude hiding (div, head, id)
 import MarkLight.Arguments
 import MarkLight.Types
 
-
 -- Tokenized character sets for paragraphs
 wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!'
-    <|> char '?' <|> char ',' <|> char ')' <|> char '('
+    <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> char '-'
 
 charToken a = tokenize $ char a
 
@@ -64,11 +63,6 @@ ensureStartOfLine :: Monad m => ParsecT s u m ()
 ensureStartOfLine = do
   pos <- getPosition
   guard (sourceColumn pos == 1)
-
---preventStartOfLine :: Monad m => ParsecT s u m ()
---preventStartOfLine = do
---  pos <- getPosition
---  guard (sourceColumn pos /= 1)
 
 blank = char ' '
 nonNewlineSpace = blank <|> tab
@@ -117,7 +111,8 @@ parseLink = braceCommand "link" $ do
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ do
-  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "link"]) (MkPositionalKeys ["title", "author"])
+  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "link"])
+    (MkPositionalKeys ["title", "author"])
   case Book
     <$> (getArgument "title" opts)
     <*> (getArgument "author" opts)
@@ -127,10 +122,13 @@ parseBook = braceCommand "book" $ do
 
 parsePicture :: Parser LightBlock
 parsePicture = ensureStartOfLine *> (tokenizeBlock $ braceCommand "picture" $ do
-  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "id"]) (MkPositionalKeys ["path", "title", "id"])
+  opts <- parseArgumentsWithDefaults
+    (MkTotalKeys ["path", "title", "id", "style"])
+    (MkPositionalKeys ["path", "title", "id"])
   Picture <$> (getArgument "path" opts)
     <*> (getArgument "title" opts)
-    <*> (getArgument "id" opts))
+    <*> (getArgument "id" opts)
+    <*> (getArgumentWithDefault "style" NoStyle opts))
 
 parsePublicationList :: Parser LightBlock
 parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications" $ do
@@ -231,7 +229,8 @@ renderLightBlock (Direct las) = return $ renderLightAtomList las
 renderLightBlock (Enumeration las) = do
     blocks <- traverse renderLightBlock las
     return $ HI.ul $ mconcat $ HI.li <$> blocks
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id)) = return $ HI.image path title id
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id) NoStyle) = return $ HI.image path title id
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id) StyleCentered) = return $ (HI.flex HI.! HI.style "justify-content:center; margin:2ex" $ HI.image path title id)
 renderLightBlock Comment = return $ mempty
 renderLightBlock (PublicationList path) = do
     bib <- readResource path

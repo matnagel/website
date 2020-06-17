@@ -16,12 +16,14 @@ module MarkLight.Arguments
 where
 
 import Control.Monad
+import Control.Applicative
+import Data.Traversable
+import Data.Maybe
 import Optics
 import qualified Data.Map as M
 import qualified Text.Parsec as P
 import Text.Parsec
   ( (<?>),
-    (<|>),
     char,
     eof,
     letter,
@@ -36,8 +38,8 @@ import Text.Parsec
     try
   )
 import Text.Parsec.Char
-import Text.Parsec.Combinator
-import Text.Parsec.Prim
+import Text.Parsec.Combinator (between, sepBy)
+-- import Text.Parsec.Prim
 import Text.Parsec.String
 import Prelude hiding (div, head, id)
 
@@ -140,16 +142,12 @@ parseArguments :: TotalKeys -> Parser Arguments
 parseArguments alloweds = parseArgumentsWithDefaults alloweds (MkPositionalKeys [])
 
 getArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m a
-getArgument str (MkArguments mp) = case M.lookup str mp of
-    Nothing -> fail $ "No value for key \"" ++ str ++ "\""
-    Just val -> fromValue val
+getArgument str (MkArguments mp) = fromMaybe
+    (fail $ "No key present for \"" ++ str ++ "\"")
+    (fromValue <$> M.lookup str mp)
 
 getOptionalArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m (Maybe a)
-getOptionalArgument str (MkArguments mp) = case M.lookup str mp of
-    Nothing -> return $ Nothing
-    Just val -> Just <$> fromValue val
+getOptionalArgument str (MkArguments mp) = sequence $ fromValue <$> M.lookup str mp
 
 getArgumentWithDefault :: (IsValue a, MonadFail m) => String -> a -> Arguments -> m a
-getArgumentWithDefault str def (MkArguments mp) = case M.lookup str mp of
-    Nothing -> return $ def
-    Just val -> fromValue val
+getArgumentWithDefault str def (MkArguments mp) = fromMaybe (return $ def) (fromValue <$> M.lookup str mp)
