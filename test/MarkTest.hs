@@ -34,8 +34,11 @@ createParseTest p desc exp input =
   TestCase
     ( assertEqual
         ("Wrong parse result: " ++ desc ++ " - Input: " ++ show input)
-        ("Right (" ++ exp ++ ")")
-        (show $ parse p "TestInput" input)
+        exp
+        (case (parse p "TestInput" input) of
+            Right str -> show str
+            Left err -> error $ show $ err
+        )
     )
 
 createParseFailTest :: Parser a -> String -> String -> Test
@@ -92,39 +95,50 @@ testCommands =
   where
     cLink = createParseTest parseLink
 
+data Person = MkPerson { firstname :: String, lastname :: String } deriving Show
+
+personArg :: Arg Person
+personArg = FromKey "lname" parseQuotedString $
+    FromKey "fname" parseQuotedString $
+    (Lift MkPerson)
+
 testArguments = TestLabel "Tests argument" $
     TestList
       [ cArguments
           "Basic Arguments"
-          "name=\"me\", url=\"www.bla\""
+          "(name=\"me\", url=\"www.bla\")"
           "url=\"www.bla\" name=\"me\"",
         cArguments
           "Arguments comma separated"
-          "id=\"tag\", name=\"me\", opt=\"dog\", url=\"www.bla\""
+          "(id=\"tag\", name=\"me\", opt=\"dog\", url=\"www.bla\")"
           "url=\"www.bla\",name=\"me\", id=\"tag\" , opt=\"dog\"",
         cDefaultArguments
           "Default arguments"
-          "id=\"tag\", name=\"me\", url=\"www.bla\""
+          "(id=\"tag\", name=\"me\", url=\"www.bla\")"
           "\"www.bla\" \"me\", id=\"tag\"",
         cDefaultArguments
           "Necessary second argument is not named."
-          "id=\"tag\", name=\"me\", url=\"www.bla\""
+          "(id=\"tag\", name=\"me\", url=\"www.bla\")"
           "url=\"www.bla\" \"me\", id=\"tag\"",
         cArguments
           "Setting key present"
-          "id=True"
+          "(id=True)"
           "id",
         cMissingArguments
           "Not all arguments present"
           "\"me\", id=\"tag\"",
         cUnknownArguments
           "Not all arguments present"
-          "id=\"tag\""
-
+          "id=\"tag\"",
+        cArgParser
+            "Simple arguments"
+            "MkPerson {firstname = \"Tom\", lastname = \"Rattle\"}"
+            "fname=\"Tom\", lname=\"Rattle\""
       ]
   where
     cArguments = createParseTest $ parseArguments (MkTotalKeys ["url", "name", "id", "opt"])
     cDefaultArguments = createParseTest $ parseArgumentsWithDefaults (MkTotalKeys ["url", "name", "id"]) (MkPositionalKeys ["url", "name"])
     cMissingArguments = createParseFailTest $ parseArgumentsWithDefaults (MkTotalKeys ["url", "name", "id"]) (MkPositionalKeys ["url", "name"])
     cUnknownArguments = createParseFailTest $ parseArguments (MkTotalKeys [])
+    cArgParser = createParseTest $ parseArg personArg
 

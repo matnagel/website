@@ -108,7 +108,6 @@ parseLink = braceCommand "link" $ do
     Link <$> (getArgument "path" opts)
          <*> (getArgument "text" opts)
 
-
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ do
   opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "link"])

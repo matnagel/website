@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs #-}
 
 module MarkLight.Types
   ( URLPath (..),
@@ -18,7 +19,8 @@ module MarkLight.Types
     Page (..),
     FlagIncludesMenu(..),
     FlagRegisterMenuEntry(..),
-    Style (..)
+    Style (..),
+    NValue (..)
   )
 where
 
@@ -28,7 +30,11 @@ import qualified Data.Map as M
 import Optics
 import Prelude hiding (div, head, id)
 
+import Data.Typeable
+
 data Value = MkValue String | MkBool Bool
+
+data NValue = forall a . Typeable a => MkNValue a
 
 instance Show Value where
   show (MkValue str) = show str

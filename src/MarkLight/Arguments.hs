@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs #-}
 
 module MarkLight.Arguments
   ( parseArguments,
@@ -11,7 +12,10 @@ module MarkLight.Arguments
     Value(..),
     IsValue(..),
     TotalKeys(..),
-    PositionalKeys(..)
+    PositionalKeys(..),
+    Arg (..),
+    parseArg,
+    parseQuotedString
   )
 where
 
@@ -27,7 +31,6 @@ import Text.Parsec
     char,
     eof,
     letter,
-    many,
     many1,
     manyTill,
     parse,
@@ -38,18 +41,63 @@ import Text.Parsec
     try
   )
 import Text.Parsec.Char
-import Text.Parsec.Combinator (between, sepBy)
+import Text.Parsec.Combinator (between, sepBy, sepBy1)
 -- import Text.Parsec.Prim
 import Text.Parsec.String
 import Prelude hiding (div, head, id)
 
 import MarkLight.Types
+import Data.Typeable
+import Data.Foldable
 
 newtype Arguments = MkArguments (M.Map String Value)
+
+newtype NArguments = MkNArguments (M.Map String NValue)
 
 newtype TotalKeys = MkTotalKeys [String]
 
 newtype PositionalKeys = MkPositionalKeys [String]
+
+data Arg a where
+    FromKey :: (Typeable a, Typeable b) => String -> Parser a -> Arg (a->b) -> Arg b
+    Lift :: Typeable a => a -> Arg a
+
+extractParserList :: Typeable a => Arg a -> [(String, Parser NValue)]
+extractParserList (Lift _) = []
+extractParserList (FromKey key p rest) = (key, (MkNValue <$> p)) :
+    extractParserList rest
+
+constructKeywordParser :: (String, Parser NValue) -> Parser (String, NValue)
+constructKeywordParser (key, p) = do
+    tokenize $ try (string key)
+    charToken '='
+    val <- tokenize $ p
+    return (key, val)
+
+combineKeywordParser :: [Parser (String, NValue)] -> Parser [(String, NValue)]
+combineKeywordParser ps = sepBy (asum ps) $ optional (charToken ',')
+
+getFromList :: MonadFail m => [(String, NValue)] -> String -> m NValue
+getFromList xs key = case find (\(k, val) -> (k == key)) xs of
+    Nothing -> fail $ "The key " ++ key ++ " was never set."
+    Just (k, val) -> return $ val
+
+computeArg :: MonadFail m => [(String, NValue)] -> Arg a -> m a
+computeArg opt (Lift a) = return $ a
+computeArg opt (FromKey key _ af) = do
+    (MkNValue val) <- getFromList opt key
+    f <- computeArg opt af
+    case cast val of
+        Nothing -> fail "Typelevel mismatch. This should never happen."
+        Just a -> return $ f a
+
+parseArg :: Typeable a => Arg a -> Parser a
+parseArg aa  = tokenize $ do
+    opt <- combineKeywordParser $ constructKeywordParser <$> extractParserList aa
+    computeArg opt aa
+
+parseQuotedString :: Parser String
+parseQuotedString = quote valueLetters
 
 argumentsGetter :: Arguments -> M.Map String Value
 argumentsGetter (MkArguments arg) = arg
