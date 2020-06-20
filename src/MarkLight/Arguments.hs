@@ -87,8 +87,8 @@ computeArg opt (Lift a) = return $ a
 computeArg opt (FromKey key _ af) = do
     (MkNValue val) <- getFromList opt key
     f <- computeArg opt af
-    case cast val of
-        Nothing -> fail "Typelevel mismatch. This should never happen."
+    case (cast val) of
+        Nothing -> fail "Type error: this should never happen"
         Just a -> return $ f a
 
 parseArg :: Typeable a => Arg a -> Parser a
