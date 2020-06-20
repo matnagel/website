@@ -9,7 +9,6 @@ module MarkLightParser
     LightBlock(..),
     parseParagraph,
     parseLink,
-    parseArguments,
     ReadLocal(..),
     WriteLocal(..)
   )
@@ -94,45 +93,88 @@ optionalSepBy sep p = do
             ps <- p
             return (ss:ps:[])
 
+
+pageInformationArg :: Argument PageInformation
+pageInformationArg =
+    FromKey "registerMenu" (stdParser) $
+    FromKey "addMenu" (stdParser) $
+    FromKey "path" (stdParser) $
+    FromKey "title" (stdParser) $ Lift MkPageInformation
+
+
 parsePageInformation :: Parser PageInformation
-parsePageInformation = tokenizeBlock $ braceCommand "page" $ do
-  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "addMenu", "registerMenu"]) (MkPositionalKeys ["path","title"])
-  MkPageInformation <$> getArgument "title" opts
-    <*> getArgument "path" opts
-    <*> getArgumentWithDefault "addMenu" (MkIncMenuFlag False) opts
-    <*> getArgumentWithDefault "registerMenu" (MkRegisterMenuEntryFlag False) opts
+parsePageInformation = tokenizeBlock $ braceCommand "page" $ parseArg pageInformationArg
+
+-- do
+--  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "addMenu", "registerMenu"]) (MkPositionalKeys ["path","title"])
+--  MkPageInformation <$> getArgument "title" opts
+--    <*> getArgument "path" opts
+--    <*> getArgumentWithDefault "addMenu" (MkIncMenuFlag False) opts
+--    <*> getArgumentWithDefault "registerMenu" (MkRegisterMenuEntryFlag False) opts
+
+linkArg :: Argument LightAtom
+linkArg = FromKey "text" (stdParser :: Parser Text) $
+          FromKey "path" (stdParser :: Parser URLPath) $
+          Lift (Link)
 
 parseLink :: Parser LightAtom
-parseLink = braceCommand "link" $ do
-    opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title"]) (MkPositionalKeys ["path", "text"])
-    Link <$> (getArgument "path" opts)
-         <*> (getArgument "text" opts)
+parseLink = braceCommand "link" $ parseArg linkArg
+
+-- do
+--     opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title"]) (MkPositionalKeys ["path", "text"])
+--     Link <$> (getArgument "path" opts)
+--          <*> (getArgument "text" opts)
+
+bookArg :: Argument LightAtom
+bookArg = FromKeyDefault "title" stdParser Nothing $
+    FromKey "author" stdParser $
+    FromKey "link" stdParser $ Lift Book
 
 parseBook :: Parser LightAtom
-parseBook = braceCommand "book" $ do
-  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "link"])
-    (MkPositionalKeys ["title", "author"])
-  case Book
-    <$> (getArgument "title" opts)
-    <*> (getArgument "author" opts)
-    <*> (getOptionalArgument "link" opts) of
-    Nothing -> fail "Arguments for author not present"
-    Just bk -> return bk
+parseBook = braceCommand "book" $ parseArg bookArg
+
+-- do
+--   opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "link"])
+--     (MkPositionalKeys ["title", "author"])
+--   case Book
+--     <$> (getArgument "title" opts)
+--     <*> (getArgument "author" opts)
+--     <*> (getOptionalArgument "link" opts) of
+--     Nothing -> fail "Arguments for author not present"
+--     Just bk -> return bk
+--
+
+pictureArg :: Argument LightBlock
+pictureArg = FromKey "style" (stdParser) $ 
+    FromKey "id" (MkID <$> parseQuotedString) $
+    FromKey "title" (MkTitle <$> parseQuotedString) $ 
+    FromKey "path" (MkURLPath <$> parseQuotedString) $
+    (Lift Picture)
 
 parsePicture :: Parser LightBlock
-parsePicture = ensureStartOfLine *> (tokenizeBlock $ braceCommand "picture" $ do
-  opts <- parseArgumentsWithDefaults
-    (MkTotalKeys ["path", "title", "id", "style"])
-    (MkPositionalKeys ["path", "title", "id"])
-  Picture <$> (getArgument "path" opts)
-    <*> (getArgument "title" opts)
-    <*> (getArgument "id" opts)
-    <*> (getArgumentWithDefault "style" NoStyle opts))
+parsePicture = ensureStartOfLine *> (tokenizeBlock $
+    braceCommand "picture" $ parseArg pictureArg)
+
+
+-- $ do
+--   opts <- parseArgumentsWithDefaults
+--     (MkTotalKeys ["path", "title", "id", "style"])
+--     (MkPositionalKeys ["path", "title", "id"])
+--   Picture <$> (getArgument "path" opts)
+--     <*> (getArgument "title" opts)
+--     <*> (getArgument "id" opts)
+--     <*> (getArgumentWithDefault "style" NoStyle opts))
+
+publicationListArg :: Argument LightBlock
+publicationListArg = FromKey "publication" stdParser $ Lift PublicationList
 
 parsePublicationList :: Parser LightBlock
-parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications" $ do
-  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path"]) (MkPositionalKeys ["path"])
-  PublicationList <$> (getArgument "path" opts))
+parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications"
+    $ parseArg publicationListArg)
+
+-- do
+--   opts <- parseArgumentsWithDefaults (MkTotalKeys ["path"]) (MkPositionalKeys ["path"])
+--   PublicationList <$> (getArgument "path" opts))
 
 parseHeader :: Parser LightBlock
 parseHeader = tokenizeBlock $ ensureStartOfLine *> do

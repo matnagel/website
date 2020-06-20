@@ -2,20 +2,12 @@
 {-# LANGUAGE GADTs #-}
 
 module MarkLight.Arguments
-  ( parseArguments,
-    parseArgumentsWithDefaults,
-    Arguments,
-    getArgument,
-    getOptionalArgument,
-    getArgumentWithDefault,
+  (
     quote,
-    Value(..),
-    IsValue(..),
-    TotalKeys(..),
-    PositionalKeys(..),
-    Arg (..),
+    Argument (..),
     parseArg,
-    parseQuotedString
+    parseQuotedString,
+    Parseable (..)
   )
 where
 
@@ -42,7 +34,6 @@ import Text.Parsec
   )
 import Text.Parsec.Char
 import Text.Parsec.Combinator (between, sepBy, sepBy1)
--- import Text.Parsec.Prim
 import Text.Parsec.String
 import Prelude hiding (div, head, id)
 
@@ -50,152 +41,91 @@ import MarkLight.Types
 import Data.Typeable
 import Data.Foldable
 
-newtype Arguments = MkArguments (M.Map String Value)
+data Value = forall a . Typeable a => MkValue a
 
-newtype NArguments = MkNArguments (M.Map String NValue)
+data Argument a where
+    FromKey :: (Typeable a, Typeable b) => String -> Parser a
+        -> Argument (a->b) -> Argument b
+    FromKeyDefault :: (Typeable a, Typeable b) => String -> Parser a -> Maybe a
+        -> Argument ( Maybe a->b) -> Argument b
+    Lift :: Typeable a => a -> Argument a
 
-newtype TotalKeys = MkTotalKeys [String]
+extractKeywordParserList :: Typeable a => Argument a -> [(String, Parser Value)]
+extractKeywordParserList (Lift _) = []
+extractKeywordParserList (FromKey key p rest) = (key, (MkValue <$> p)) :
+    extractKeywordParserList rest
 
-newtype PositionalKeys = MkPositionalKeys [String]
-
-data Arg a where
-    FromKey :: (Typeable a, Typeable b) => String -> Parser a -> Arg (a->b) -> Arg b
-    Lift :: Typeable a => a -> Arg a
-
-extractParserList :: Typeable a => Arg a -> [(String, Parser NValue)]
-extractParserList (Lift _) = []
-extractParserList (FromKey key p rest) = (key, (MkNValue <$> p)) :
-    extractParserList rest
-
-constructKeywordParser :: (String, Parser NValue) -> Parser (String, NValue)
+constructKeywordParser :: (String, Parser Value) -> Parser (String, Value)
 constructKeywordParser (key, p) = do
     tokenize $ try (string key)
     charToken '='
     val <- tokenize $ p
     return (key, val)
 
-combineKeywordParser :: [Parser (String, NValue)] -> Parser [(String, NValue)]
+combineKeywordParser :: [Parser (String, Value)] -> Parser [(String, Value)]
 combineKeywordParser ps = sepBy (asum ps) $ optional (charToken ',')
 
-getFromList :: MonadFail m => [(String, NValue)] -> String -> m NValue
-getFromList xs key = case find (\(k, val) -> (k == key)) xs of
-    Nothing -> fail $ "The key " ++ key ++ " was never set."
-    Just (k, val) -> return $ val
+getFromList :: [(String, Value)] -> String -> Maybe Value
+getFromList xs key = (\(k,v) -> v) <$> find (\(k, v) -> (k == key)) xs
 
-computeArg :: MonadFail m => [(String, NValue)] -> Arg a -> m a
+computeArg :: MonadFail m => [(String, Value)] -> Argument a -> m a
 computeArg opt (Lift a) = return $ a
-computeArg opt (FromKey key _ af) = do
-    (MkNValue val) <- getFromList opt key
-    f <- computeArg opt af
-    case (cast val) of
-        Nothing -> fail "Type error: this should never happen"
-        Just a -> return $ f a
+computeArg opt (FromKey key _ af) = case getFromList opt key of
+        Nothing -> fail $ "Required Key " ++ key ++ " has not been set"
+        Just (MkValue val) -> do
+            f <- computeArg opt af
+            case (cast val) of
+                Nothing -> fail "Type error: this should never happen"
+                Just a -> return $ f a
 
-parseArg :: Typeable a => Arg a -> Parser a
+parseArg :: Typeable a => Argument a -> Parser a
 parseArg aa  = tokenize $ do
-    opt <- combineKeywordParser $ constructKeywordParser <$> extractParserList aa
+    opt <- combineKeywordParser $ constructKeywordParser <$> extractKeywordParserList aa
     computeArg opt aa
-
-parseQuotedString :: Parser String
-parseQuotedString = quote valueLetters
-
-argumentsGetter :: Arguments -> M.Map String Value
-argumentsGetter (MkArguments arg) = arg
-
-argumentsSetter :: Arguments -> M.Map String Value -> Arguments
-argumentsSetter (MkArguments arg) sarg = MkArguments $ sarg
-
-argumentsOptic = lens argumentsGetter argumentsSetter
-
-data AccumulateArguments = MkAcc [Value] Arguments
-
-instance Semigroup Arguments where
-  (<>) (MkArguments a) (MkArguments b) = MkArguments (b <> a)
-
-instance Monoid Arguments where
-  mempty = MkArguments mempty
-
-instance Semigroup AccumulateArguments where
-  (<>) (MkAcc as arg) (MkAcc bs brg) = MkAcc (as <> bs) (arg <> brg)
-
-instance Monoid AccumulateArguments where
-  mempty = MkAcc [] mempty
 
 tokenize :: Parser a -> Parser a
 tokenize p = p <* spaces
 
 charToken a = tokenize $ char a
 
-keyletters = tokenize $ many1 alphaNum
-
-valueLetters = tokenize $ many1 (alphaNum <|> char ':' <|> char '/' <|> char ' '
+valueLetters = (alphaNum <|> char ':' <|> char '/' <|> char ' '
     <|> char '.' <|> char ',' <|> char '-' <|> char '~')
-
-showArgument (k, v) = k ++ "=" ++ show v
-
-interleave sep [] = []
-interleave sep (x : []) = x
-interleave sep (x : ys) = x <> sep <> interleave sep ys
-
-instance Show Arguments where
-  show (MkArguments a) = "(" ++ interleave ", " (showArgument <$> (M.toList a)) ++ ")"
 
 quote p = tokenize $ between (char '\"') (charToken '\"') p
 
-parseArgument :: TotalKeys -> Parser Arguments
-parseArgument (MkTotalKeys allowedKeys) = tokenize $ do
-  key <- keyletters
-  if notElem key allowedKeys
-    then fail $ "Unknown key: " ++ key
-    else (parseSetValue key) <|> (return $ setKeyPresent key)
+parseQuotedString :: Parser String
+parseQuotedString = quote $ many valueLetters
 
-setKeyPresent :: String -> Arguments
-setKeyPresent key = MkArguments $ M.singleton key (MkBool True)
+class Parseable a where
+    stdParser :: Parser a
 
-parseSetValue :: String -> Parser Arguments
-parseSetValue key = do
-  charToken '='
-  value <- MkValue <$> quote valueLetters
-  return $ MkArguments $ M.singleton key value
+boolParser :: Parser Bool
+boolParser = (string "true" >> return True) <|> (string "false" >> return False)
 
-parseUnassignedArgument :: Parser AccumulateArguments
-parseUnassignedArgument = tokenize $ do
-    value <- MkValue <$> quote valueLetters
-    return $ MkAcc [value] mempty
+instance Parseable FlagRegisterMenuEntry where
+    stdParser = MkRegisterMenuEntryFlag <$> boolParser
 
-parseAccumulateArguments :: TotalKeys -> Parser AccumulateArguments
-parseAccumulateArguments allowedKeys = tokenize $ do
-    opts <- sepBy (parseUnassignedArgument
-                    <|> (MkAcc [] <$> parseArgument allowedKeys)) $ optional (charToken ',')
-    return $ mconcat opts
+instance Parseable FlagIncludesMenu where
+    stdParser = MkIncMenuFlag <$> boolParser
 
-isArgumentPresent :: MonadFail m => Arguments -> String -> m ()
-isArgumentPresent (MkArguments arg) key = case M.member key arg of
-    True -> return $ ()
-    False -> fail $ "Argument error: Key " ++ key ++ "=\"..\" is missing."
+instance Parseable TargetPath where
+    stdParser = MkTargetPath <$> parseQuotedString
 
-parseArgumentsWithDefaults :: TotalKeys -> PositionalKeys -> Parser Arguments
-parseArgumentsWithDefaults allowedKeys posKeys@(MkPositionalKeys posList) = tokenize $ do
-    args <- addKeysWithDefaults posKeys <$> parseAccumulateArguments allowedKeys
-    foldr (*>) (return args) (isArgumentPresent args <$> posList)
+instance Parseable Text where
+    stdParser = MkText <$> parseQuotedString
 
-addKeysWithDefaults :: PositionalKeys -> AccumulateArguments -> Arguments
-addKeysWithDefaults (MkPositionalKeys []) (MkAcc _ args) = args
-addKeysWithDefaults _ (MkAcc [] args) = args
-addKeysWithDefaults (MkPositionalKeys (k:ks)) aa@(MkAcc (v:vs) args) = if (M.notMember k $ view argumentsOptic args)
-    then addKeysWithDefaults (MkPositionalKeys ks) (MkAcc vs $ over argumentsOptic (M.insert k v) args)
-    else addKeysWithDefaults (MkPositionalKeys ks) aa
+instance Parseable LocalPath where
+    stdParser = MkLocalPath <$> parseQuotedString
 
-parseArguments :: TotalKeys -> Parser Arguments
-parseArguments alloweds = parseArgumentsWithDefaults alloweds (MkPositionalKeys [])
+instance Parseable Title where
+    stdParser = MkTitle <$> parseQuotedString
 
-getArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m a
-getArgument str (MkArguments mp) = fromMaybe
-    (fail $ "No key present for \"" ++ str ++ "\"")
-    (fromValue <$> M.lookup str mp)
+instance Parseable Author where
+    stdParser = MkAuthor <$> parseQuotedString
 
-getOptionalArgument :: (IsValue a, MonadFail m) => String -> Arguments -> m (Maybe a)
-getOptionalArgument str (MkArguments mp) = sequence $ fromValue <$> M.lookup str mp
+instance Parseable URLPath where
+    stdParser = MkURLPath <$> parseQuotedString
 
-getArgumentWithDefault :: (IsValue a, MonadFail m) => String -> a -> Arguments -> m a
-getArgumentWithDefault str def (MkArguments mp) = fromMaybe (return $ def) (fromValue <$> M.lookup str mp)
+instance Parseable Style where
+    stdParser = (string "centered" >> (return $ StyleCentered))
+        <|> (string "nostyle" >> return NoStyle)

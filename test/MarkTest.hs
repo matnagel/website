@@ -86,59 +86,56 @@ testCommands =
       [ cLink
           "Correct link"
           "Link (MkURLPath \"test.path/succ\") (MkText \"my link.\")"
-          "{link \"test.path/succ\" \"my link.\"}",
+          "{link path=\"test.path/succ\" text=\"my link.\"}",
         cLink
           "Correct link with newline"
           "Link (MkURLPath \"test.path/succ\") (MkText \"my link.\")"
-          "{link\n\"test.path/succ\"\n \"my link.\"}"
+          "{link\n path=\"test.path/succ\"\n text=\"my link.\"}"
       ]
   where
     cLink = createParseTest parseLink
 
 data Person = MkPerson { firstname :: String, lastname :: String } deriving Show
 
-personArg :: Arg Person
+personArg :: Argument Person
 personArg = FromKey "lname" parseQuotedString $
     FromKey "fname" parseQuotedString $
     (Lift MkPerson)
 
 testArguments = TestLabel "Tests argument" $
     TestList
-      [ cArguments
-          "Basic Arguments"
-          "(name=\"me\", url=\"www.bla\")"
-          "url=\"www.bla\" name=\"me\"",
-        cArguments
-          "Arguments comma separated"
-          "(id=\"tag\", name=\"me\", opt=\"dog\", url=\"www.bla\")"
-          "url=\"www.bla\",name=\"me\", id=\"tag\" , opt=\"dog\"",
-        cDefaultArguments
-          "Default arguments"
-          "(id=\"tag\", name=\"me\", url=\"www.bla\")"
-          "\"www.bla\" \"me\", id=\"tag\"",
-        cDefaultArguments
-          "Necessary second argument is not named."
-          "(id=\"tag\", name=\"me\", url=\"www.bla\")"
-          "url=\"www.bla\" \"me\", id=\"tag\"",
-        cArguments
-          "Setting key present"
-          "(id=True)"
-          "id",
-        cMissingArguments
-          "Not all arguments present"
-          "\"me\", id=\"tag\"",
-        cUnknownArguments
-          "Not all arguments present"
-          "id=\"tag\"",
+      [
+--         cArguments
+--           "Basic Arguments"
+--           "(name=\"me\", url=\"www.bla\")"
+--           "url=\"www.bla\" name=\"me\"",
+--         cArguments
+--           "Arguments comma separated"
+--           "(id=\"tag\", name=\"me\", opt=\"dog\", url=\"www.bla\")"
+--           "url=\"www.bla\",name=\"me\", id=\"tag\" , opt=\"dog\"",
+--         cDefaultArguments
+--           "Default arguments"
+--           "(id=\"tag\", name=\"me\", url=\"www.bla\")"
+--           "\"www.bla\" \"me\", id=\"tag\"",
+--         cDefaultArguments
+--           "Necessary second argument is not named."
+--           "(id=\"tag\", name=\"me\", url=\"www.bla\")"
+--           "url=\"www.bla\" \"me\", id=\"tag\"",
+--         cArguments
+--           "Setting key present"
+--           "(id=True)"
+--           "id",
+--         cMissingArguments
+--           "Not all arguments present"
+--           "\"me\", id=\"tag\"",
+--         cUnknownArguments
+--           "Not all arguments present"
+--           "id=\"tag\"",
         cArgParser
             "Simple arguments"
             "MkPerson {firstname = \"Tom\", lastname = \"Rattle\"}"
             "fname=\"Tom\", lname=\"Rattle\""
       ]
   where
-    cArguments = createParseTest $ parseArguments (MkTotalKeys ["url", "name", "id", "opt"])
-    cDefaultArguments = createParseTest $ parseArgumentsWithDefaults (MkTotalKeys ["url", "name", "id"]) (MkPositionalKeys ["url", "name"])
-    cMissingArguments = createParseFailTest $ parseArgumentsWithDefaults (MkTotalKeys ["url", "name", "id"]) (MkPositionalKeys ["url", "name"])
-    cUnknownArguments = createParseFailTest $ parseArguments (MkTotalKeys [])
     cArgParser = createParseTest $ parseArg personArg
 

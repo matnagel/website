@@ -11,8 +11,6 @@ module MarkLight.Types
     CSSID (..),
     ReadLocal (..),
     WriteLocal (..),
-    IsValue (..),
-    Value (..),
     LightAtom (..),
     LightBlock (..),
     PageInformation (..),
@@ -20,7 +18,6 @@ module MarkLight.Types
     FlagIncludesMenu(..),
     FlagRegisterMenuEntry(..),
     Style (..),
-    NValue (..)
   )
 where
 
@@ -29,19 +26,6 @@ import Data.String
 import qualified Data.Map as M
 import Optics
 import Prelude hiding (div, head, id)
-
-import Data.Typeable
-
-data Value = MkValue String | MkBool Bool
-
-data NValue = forall a . Typeable a => MkNValue a
-
-instance Show Value where
-  show (MkValue str) = show str
-  show (MkBool a) = show a
-
-class IsValue a where
-  fromValue :: MonadFail m => Value -> m a
 
 newtype URLPath = MkURLPath String deriving (Eq, Show)
 
@@ -52,7 +36,13 @@ instance IsString LocalPath where
 
 newtype TargetPath = MkTargetPath String deriving (Show)
 
+instance IsString TargetPath where
+    fromString str = MkTargetPath str
+
 newtype Title = MkTitle String deriving (Eq, Show)
+
+instance IsString Title where
+    fromString str = MkTitle str
 
 newtype Author = MkAuthor String deriving (Eq, Show)
 
@@ -106,53 +96,8 @@ data Page = MkPage
     { getPageMetadata :: PageInformation,
       getContent :: LightBlock } deriving (Show)
 
-instance IsValue URLPath where
-  fromValue (MkValue val) = return $ MkURLPath val
-
-instance IsValue LocalPath where
-  fromValue (MkValue val) = return $ MkLocalPath val
-
-instance IsValue Title where
-  fromValue (MkValue val) = return $ MkTitle val
-
-instance IsString Title where
-  fromString str = MkTitle str
-
-instance IsValue TargetPath where
-  fromValue (MkValue val) = return $ MkTargetPath val
-
-instance IsString TargetPath where
-  fromString str = MkTargetPath str
-
-instance IsValue Text where
-  fromValue (MkValue val) = return $ MkText val
-
-instance IsValue CSSID where
-  fromValue (MkValue val) = return $ MkID val
-
-instance IsValue Author where
-  fromValue (MkValue val) = return $ MkAuthor val
-
-instance IsValue Style where
-  fromValue (MkValue "centered") = return $ StyleCentered
-  fromValue _ = fail "Unknown Style"
-
-
-instance IsValue FlagIncludesMenu where
-  fromValue (MkValue "true") = return $ MkIncMenuFlag True
-  fromValue (MkValue "false") = return $ MkIncMenuFlag False
-  fromValue (MkBool a) = return $ MkIncMenuFlag a
-  fromValue (MkValue _) = fail "Flag IncludesMenu needs to be either true or false"
-
-instance IsValue FlagRegisterMenuEntry where
-  fromValue (MkValue "true") = return $ MkRegisterMenuEntryFlag True
-  fromValue (MkValue "false") = return $ MkRegisterMenuEntryFlag False
-  fromValue (MkBool a) = return $ MkRegisterMenuEntryFlag a
-  fromValue (MkValue _) = fail "Flag AddMenu needs to be either true or false"
-
 class (Monad m) => ReadLocal m where
   readResource :: LocalPath -> m String
 
 class (Monad m) => WriteLocal m where
     writeResource :: LocalPath -> String -> m ()
-
