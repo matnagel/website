@@ -60,15 +60,15 @@ extractKeywordParserList (FromKeyDefault key p _) = return $ (key, (MkValue <$> 
 extractKeywordParserList (Application f a) = extractKeywordParserList f ++
     extractKeywordParserList a
 
-constructKeywordParser :: (String, Parser Value) -> Parser (String, Value)
-constructKeywordParser (key, p) = do
+constructKeyedParser :: (String, Parser Value) -> Parser (String, Value)
+constructKeyedParser (key, p) = do
     tokenize $ try (string key)
     charToken '='
     val <- tokenize $ p
     return (key, val)
 
-combineKeywordParser :: [Parser (String, Value)] -> Parser [(String, Value)]
-combineKeywordParser ps = sepBy (asum ps) $ optional (charToken ',')
+concatParserList :: [Parser (String, Value)] -> Parser [(String, Value)]
+concatParserList ps = sepBy (asum ps) $ optional (charToken ',')
 
 getFromList :: [(String, Value)] -> String -> Maybe Value
 getFromList xs key = (\(k,v) -> v) <$> find (\(k, v) -> (k == key)) xs
@@ -79,7 +79,7 @@ computeArg opt (FromKey key _) = case getFromList opt key of
         Nothing -> fail $ "Required Key " ++ key ++ " has not been set"
         Just (MkValue val) -> case (cast val) of
                 Nothing -> fail "Type error: this should never happen"
-                Just a -> return $ a
+                Just a -> return a
 computeArg opt (FromKeyDefault key _ def) = case getFromList opt key of
         Nothing -> return $ def
         Just (MkValue val) -> case (cast val) of
@@ -90,10 +90,9 @@ computeArg opt (Application af aa) = do
     a <- computeArg opt aa
     return $ f a
 
-
 parseArg :: Typeable a => Argument a -> Parser a
 parseArg aa  = tokenize $ do
-    opt <- combineKeywordParser $ constructKeywordParser <$> extractKeywordParserList aa
+    opt <- concatParserList $ constructKeyedParser <$> extractKeywordParserList aa
     computeArg opt aa
 
 tokenize :: Parser a -> Parser a

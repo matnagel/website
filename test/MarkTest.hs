@@ -141,10 +141,14 @@ testArguments = TestLabel "Tests argument" $
         cArgDefParser
             "Default firstname"
             "MkPerson {firstname = \"Bill\", lastname = \"Rattle\"}"
-            "lname=\"Rattle\" "
+            "lname=\"Rattle\" ",
+        cFailArgParser
+            "Double firstname"
+            "fname=\"Tom\", lname=\"Rattle\", fname=\"Zippo\""
 
       ]
   where
     cArgParser = createParseTest $ parseArg personArg
+    cFailArgParser = createParseFailTest $ parseArg personArg
     cArgDefParser = createParseTest $ parseArg personArgDefault
 
