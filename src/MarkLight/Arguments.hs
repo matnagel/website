@@ -7,7 +7,8 @@ module MarkLight.Arguments
     Argument (..),
     parseArg,
     parseQuotedString,
-    Parseable (..)
+    Parseable (..),
+    (<:)
   )
 where
 
@@ -44,16 +45,20 @@ import Data.Foldable
 data Value = forall a . Typeable a => MkValue a
 
 data Argument a where
-    FromKey :: (Typeable a, Typeable b) => String -> Parser a
-        -> Argument (a->b) -> Argument b
-    FromKeyDefault :: (Typeable a, Typeable b) => String -> Parser a -> Maybe a
-        -> Argument ( Maybe a->b) -> Argument b
+    FromKey :: Typeable a => String -> Parser a -> Argument a
+    FromKeyDefault :: Typeable a => String -> Parser a -> Maybe a -> Argument (Maybe a)
+    Application :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
     Lift :: Typeable a => a -> Argument a
+
+(<:) :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
+(<:) = Application
 
 extractKeywordParserList :: Typeable a => Argument a -> [(String, Parser Value)]
 extractKeywordParserList (Lift _) = []
-extractKeywordParserList (FromKey key p rest) = (key, (MkValue <$> p)) :
-    extractKeywordParserList rest
+extractKeywordParserList (FromKey key p) = return $ (key, (MkValue <$> p))
+extractKeywordParserList (FromKeyDefault key p _) = return $ (key, (MkValue <$> p))
+extractKeywordParserList (Application f a) = extractKeywordParserList f ++
+    extractKeywordParserList a
 
 constructKeywordParser :: (String, Parser Value) -> Parser (String, Value)
 constructKeywordParser (key, p) = do
@@ -70,13 +75,21 @@ getFromList xs key = (\(k,v) -> v) <$> find (\(k, v) -> (k == key)) xs
 
 computeArg :: MonadFail m => [(String, Value)] -> Argument a -> m a
 computeArg opt (Lift a) = return $ a
-computeArg opt (FromKey key _ af) = case getFromList opt key of
+computeArg opt (FromKey key _) = case getFromList opt key of
         Nothing -> fail $ "Required Key " ++ key ++ " has not been set"
-        Just (MkValue val) -> do
-            f <- computeArg opt af
-            case (cast val) of
+        Just (MkValue val) -> case (cast val) of
                 Nothing -> fail "Type error: this should never happen"
-                Just a -> return $ f a
+                Just a -> return $ a
+computeArg opt (FromKeyDefault key _ def) = case getFromList opt key of
+        Nothing -> return $ def
+        Just (MkValue val) -> case (cast val) of
+                Nothing -> fail "Type error: this should never happen"
+                Just a -> return $ a
+computeArg opt (Application af aa) = do
+    f <- computeArg opt af
+    a <- computeArg opt aa
+    return $ f a
+
 
 parseArg :: Typeable a => Argument a -> Parser a
 parseArg aa  = tokenize $ do

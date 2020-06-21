@@ -98,9 +98,9 @@ testCommands =
 data Person = MkPerson { firstname :: String, lastname :: String } deriving Show
 
 personArg :: Argument Person
-personArg = FromKey "lname" parseQuotedString $
-    FromKey "fname" parseQuotedString $
-    (Lift MkPerson)
+personArg = (Lift MkPerson)
+    <: FromKey "fname" parseQuotedString
+    <: FromKey "lname" parseQuotedString
 
 testArguments = TestLabel "Tests argument" $
     TestList

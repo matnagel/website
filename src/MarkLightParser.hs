@@ -95,11 +95,11 @@ optionalSepBy sep p = do
 
 
 pageInformationArg :: Argument PageInformation
-pageInformationArg =
-    FromKey "registerMenu" (stdParser) $
-    FromKey "addMenu" (stdParser) $
-    FromKey "path" (stdParser) $
-    FromKey "title" (stdParser) $ Lift MkPageInformation
+pageInformationArg = (Lift MkPageInformation)
+    <: FromKey "registerMenu" (stdParser)
+    <: FromKey "addMenu" (stdParser)
+    <: FromKey "path" (stdParser)
+    <: FromKey "title" (stdParser)
 
 
 parsePageInformation :: Parser PageInformation
@@ -113,9 +113,9 @@ parsePageInformation = tokenizeBlock $ braceCommand "page" $ parseArg pageInform
 --    <*> getArgumentWithDefault "registerMenu" (MkRegisterMenuEntryFlag False) opts
 
 linkArg :: Argument LightAtom
-linkArg = FromKey "text" (stdParser :: Parser Text) $
-          FromKey "path" (stdParser :: Parser URLPath) $
-          Lift (Link)
+linkArg = Lift (Link)
+    <: FromKey "path" (stdParser :: Parser URLPath)
+    <: FromKey "text" (stdParser :: Parser Text)
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ parseArg linkArg
@@ -126,9 +126,10 @@ parseLink = braceCommand "link" $ parseArg linkArg
 --          <*> (getArgument "text" opts)
 
 bookArg :: Argument LightAtom
-bookArg = FromKeyDefault "title" stdParser Nothing $
-    FromKey "author" stdParser $
-    FromKey "link" stdParser $ Lift Book
+bookArg = (Lift Book)
+    <: FromKey "title" stdParser
+    <: FromKey "author" stdParser
+    <: FromKeyDefault "link" stdParser Nothing
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ parseArg bookArg
@@ -145,11 +146,11 @@ parseBook = braceCommand "book" $ parseArg bookArg
 --
 
 pictureArg :: Argument LightBlock
-pictureArg = FromKey "style" (stdParser) $ 
-    FromKey "id" (MkID <$> parseQuotedString) $
-    FromKey "title" (MkTitle <$> parseQuotedString) $ 
-    FromKey "path" (MkURLPath <$> parseQuotedString) $
-    (Lift Picture)
+pictureArg = Lift Picture
+    <: FromKey "path" (MkURLPath <$> parseQuotedString)
+    <: FromKey "title" (MkTitle <$> parseQuotedString)
+    <: FromKey "id" (MkID <$> parseQuotedString)
+    <: FromKey "style" (stdParser)
 
 parsePicture :: Parser LightBlock
 parsePicture = ensureStartOfLine *> (tokenizeBlock $
@@ -166,7 +167,7 @@ parsePicture = ensureStartOfLine *> (tokenizeBlock $
 --     <*> (getArgumentWithDefault "style" NoStyle opts))
 
 publicationListArg :: Argument LightBlock
-publicationListArg = FromKey "publication" stdParser $ Lift PublicationList
+publicationListArg = Lift PublicationList <: FromKey "publication" stdParser
 
 parsePublicationList :: Parser LightBlock
 parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications"
