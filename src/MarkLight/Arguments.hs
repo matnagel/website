@@ -44,6 +44,8 @@ import Data.Foldable
 
 data Value = forall a . Typeable a => MkValue a
 
+type ValueStorage = M.Map String Value
+
 data Argument a where
     FromKey :: Typeable a => String -> Parser a -> Argument a
     FromKeyDefault :: Typeable a => String -> Parser a -> a -> Argument a
@@ -67,20 +69,26 @@ constructKeyedParser (key, p) = do
     val <- tokenize $ p
     return (key, val)
 
-concatParserList :: [Parser (String, Value)] -> Parser [(String, Value)]
-concatParserList ps = sepBy (asum ps) $ optional (charToken ',')
+noDuplicateInsert :: MonadFail m => [(String, Value)] -> ValueStorage -> m ValueStorage
+noDuplicateInsert [] storage = return $ storage
+noDuplicateInsert ((key, val):xs) storage =
+    if (M.notMember key storage)
+    then noDuplicateInsert xs $ M.insert key val storage
+    else fail $ " The key \"" ++ key ++ "\" occured twice"
 
-getFromList :: [(String, Value)] -> String -> Maybe Value
-getFromList xs key = (\(k,v) -> v) <$> find (\(k, v) -> (k == key)) xs
+parseValueStorage :: [(String, Parser Value)] -> Parser ValueStorage
+parseValueStorage ps = do
+    kvs <- sepBy (asum $ constructKeyedParser <$> ps) $ optional (charToken ',')
+    noDuplicateInsert kvs mempty
 
-computeArg :: MonadFail m => [(String, Value)] -> Argument a -> m a
-computeArg opt (Lift a) = return $ a
-computeArg opt (FromKey key _) = case getFromList opt key of
+computeArg :: MonadFail m => ValueStorage -> Argument a -> m a
+computeArg _ (Lift a) = return $ a
+computeArg opt (FromKey key _) = case M.lookup key opt of
         Nothing -> fail $ "Required Key " ++ key ++ " has not been set"
         Just (MkValue val) -> case (cast val) of
                 Nothing -> fail "Type error: this should never happen"
                 Just a -> return a
-computeArg opt (FromKeyDefault key _ def) = case getFromList opt key of
+computeArg opt (FromKeyDefault key _ def) = case M.lookup key opt of
         Nothing -> return $ def
         Just (MkValue val) -> case (cast val) of
                 Nothing -> fail "Type error: this should never happen"
@@ -92,7 +100,7 @@ computeArg opt (Application af aa) = do
 
 parseArg :: Typeable a => Argument a -> Parser a
 parseArg aa  = tokenize $ do
-    opt <- concatParserList $ constructKeyedParser <$> extractKeywordParserList aa
+    opt <- parseValueStorage (extractKeywordParserList aa)
     computeArg opt aa
 
 tokenize :: Parser a -> Parser a

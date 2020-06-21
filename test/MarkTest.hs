@@ -29,7 +29,7 @@ createParseTest p desc exp input =
     ( assertEqual
         ("Wrong parse result: " ++ desc ++ " - Input: " ++ show input)
         exp
-        (case (parse p "TestInput" input) of
+        (case (parse p ("TestInput: " ++ input) input) of
             Right str -> show str
             Left err -> error $ show $ err
         )
