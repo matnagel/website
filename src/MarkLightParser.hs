@@ -129,7 +129,7 @@ bookArg :: Argument LightAtom
 bookArg = (Lift Book)
     <: FromKey "title" stdParser
     <: FromKey "author" stdParser
-    <: FromKeyDefault "link" stdParser Nothing
+    <: FromKeyDefault "link" (return <$> stdParser) Nothing
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ parseArg bookArg

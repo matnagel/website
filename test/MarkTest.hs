@@ -10,12 +10,6 @@ import Test.HUnit
 import Text.Parsec
 import Text.Parsec.String
 
-parseUnsafe :: Show er => (String -> Either er a) -> String -> a
-parseUnsafe p str =
-  case p str of
-    Left er -> error $ show er
-    Right exp -> exp
-
 runList :: [Test] -> IO ()
 runList [] = return ()
 runList (t : ts) = do
@@ -102,6 +96,11 @@ personArg = (Lift MkPerson)
     <: FromKey "fname" parseQuotedString
     <: FromKey "lname" parseQuotedString
 
+personArgDefault :: Argument Person
+personArgDefault = (Lift MkPerson)
+    <: FromKeyDefault "fname" parseQuotedString "Bill"
+    <: FromKey "lname" parseQuotedString
+
 testArguments = TestLabel "Tests argument" $
     TestList
       [
@@ -134,8 +133,18 @@ testArguments = TestLabel "Tests argument" $
         cArgParser
             "Simple arguments"
             "MkPerson {firstname = \"Tom\", lastname = \"Rattle\"}"
-            "fname=\"Tom\", lname=\"Rattle\""
+            "fname=\"Tom\", lname=\"Rattle\"",
+        cArgParser
+            "Switch arguments"
+            "MkPerson {firstname = \"Tom\", lastname = \"Rattle\"}"
+            "lname=\"Rattle\" fname=\"Tom\" ",
+        cArgDefParser
+            "Default firstname"
+            "MkPerson {firstname = \"Bill\", lastname = \"Rattle\"}"
+            "lname=\"Rattle\" "
+
       ]
   where
     cArgParser = createParseTest $ parseArg personArg
+    cArgDefParser = createParseTest $ parseArg personArgDefault
 

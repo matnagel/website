@@ -46,7 +46,7 @@ data Value = forall a . Typeable a => MkValue a
 
 data Argument a where
     FromKey :: Typeable a => String -> Parser a -> Argument a
-    FromKeyDefault :: Typeable a => String -> Parser a -> Maybe a -> Argument (Maybe a)
+    FromKeyDefault :: Typeable a => String -> Parser a -> a -> Argument a
     Application :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
     Lift :: Typeable a => a -> Argument a
 
