@@ -101,35 +101,17 @@ personArgDefault = (Lift MkPerson)
     <: FromKeyDefault "fname" parseQuotedString "Bill"
     <: FromKey "lname" parseQuotedString
 
+
+data Configuration = MkConfig { containsMenu :: Bool, isHome :: Bool } deriving Show
+
+configurationArg :: Argument Configuration
+configurationArg = (Lift MkConfig)
+    <: FromFlag "containsMenu"
+    <: FromKey "isHome" parseBool
+
 testArguments = TestLabel "Tests argument" $
     TestList
       [
---         cArguments
---           "Basic Arguments"
---           "(name=\"me\", url=\"www.bla\")"
---           "url=\"www.bla\" name=\"me\"",
---         cArguments
---           "Arguments comma separated"
---           "(id=\"tag\", name=\"me\", opt=\"dog\", url=\"www.bla\")"
---           "url=\"www.bla\",name=\"me\", id=\"tag\" , opt=\"dog\"",
---         cDefaultArguments
---           "Default arguments"
---           "(id=\"tag\", name=\"me\", url=\"www.bla\")"
---           "\"www.bla\" \"me\", id=\"tag\"",
---         cDefaultArguments
---           "Necessary second argument is not named."
---           "(id=\"tag\", name=\"me\", url=\"www.bla\")"
---           "url=\"www.bla\" \"me\", id=\"tag\"",
---         cArguments
---           "Setting key present"
---           "(id=True)"
---           "id",
---         cMissingArguments
---           "Not all arguments present"
---           "\"me\", id=\"tag\"",
---         cUnknownArguments
---           "Not all arguments present"
---           "id=\"tag\"",
         cArgParser
             "Simple arguments"
             "MkPerson {firstname = \"Tom\", lastname = \"Rattle\"}"
@@ -144,11 +126,15 @@ testArguments = TestLabel "Tests argument" $
             "lname=\"Rattle\" ",
         cFailArgParser
             "Double firstname"
-            "fname=\"Tom\", lname=\"Rattle\", fname=\"Zippo\""
-
+            "fname=\"Tom\", lname=\"Rattle\", fname=\"Zippo\"",
+        cConfigParser
+            "Parse Flags and Bools"
+            "MkConfig {containsMenu = True, isHome = True}"
+            "isHome=true, containsMenu"
       ]
   where
     cArgParser = createParseTest $ parseArg personArg
+    cConfigParser = createParseTest $ parseArg configurationArg
     cFailArgParser = createParseFailTest $ parseArg personArg
     cArgDefParser = createParseTest $ parseArg personArgDefault
 

@@ -7,6 +7,7 @@ module MarkLight.Arguments
     Argument (..),
     parseArg,
     parseQuotedString,
+    parseBool,
     Parseable (..),
     (<:)
   )
@@ -49,25 +50,31 @@ type ValueStorage = M.Map String Value
 data Argument a where
     FromKey :: Typeable a => String -> Parser a -> Argument a
     FromKeyDefault :: Typeable a => String -> Parser a -> a -> Argument a
+    FromFlag :: String -> Argument Bool
     Application :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
     Lift :: Typeable a => a -> Argument a
 
 (<:) :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
 (<:) = Application
 
-extractKeywordParserList :: Typeable a => Argument a -> [(String, Parser Value)]
-extractKeywordParserList (Lift _) = []
-extractKeywordParserList (FromKey key p) = return $ (key, (MkValue <$> p))
-extractKeywordParserList (FromKeyDefault key p _) = return $ (key, (MkValue <$> p))
-extractKeywordParserList (Application f a) = extractKeywordParserList f ++
-    extractKeywordParserList a
-
-constructKeyedParser :: (String, Parser Value) -> Parser (String, Value)
-constructKeyedParser (key, p) = do
+keyValueParser :: Typeable a => String -> Parser a -> Parser (String, Value)
+keyValueParser key p = do
     tokenize $ try (string key)
     charToken '='
     val <- tokenize $ p
-    return (key, val)
+    return $ (key, MkValue val)
+
+flagParser :: String -> Parser (String, Value)
+flagParser key = do
+    tokenize $ try (string key)
+    return $ (key, MkValue True)
+
+extractParserList :: Typeable a => Argument a -> [Parser (String, Value)]
+extractParserList (Lift _) = []
+extractParserList (FromKey key p) = [keyValueParser key p]
+extractParserList (FromFlag key) = [flagParser key]
+extractParserList (FromKeyDefault key p _) = [keyValueParser key p]
+extractParserList (Application f a) = extractParserList f ++ extractParserList a
 
 noDuplicateInsert :: MonadFail m => [(String, Value)] -> ValueStorage -> m ValueStorage
 noDuplicateInsert [] storage = return $ storage
@@ -76,15 +83,20 @@ noDuplicateInsert ((key, val):xs) storage =
     then noDuplicateInsert xs $ M.insert key val storage
     else fail $ " The key \"" ++ key ++ "\" occured twice"
 
-parseValueStorage :: [(String, Parser Value)] -> Parser ValueStorage
+parseValueStorage :: [Parser (String, Value)] -> Parser ValueStorage
 parseValueStorage ps = do
-    kvs <- sepBy (asum $ constructKeyedParser <$> ps) $ optional (charToken ',')
+    kvs <- sepBy (asum ps) $ optional (charToken ',')
     noDuplicateInsert kvs mempty
 
 computeArg :: MonadFail m => ValueStorage -> Argument a -> m a
 computeArg _ (Lift a) = return $ a
 computeArg opt (FromKey key _) = case M.lookup key opt of
         Nothing -> fail $ "Required Key " ++ key ++ " has not been set"
+        Just (MkValue val) -> case (cast val) of
+                Nothing -> fail "Type error: this should never happen"
+                Just a -> return a
+computeArg opt (FromFlag key) = case M.lookup key opt of
+        Nothing -> return False
         Just (MkValue val) -> case (cast val) of
                 Nothing -> fail "Type error: this should never happen"
                 Just a -> return a
@@ -100,7 +112,7 @@ computeArg opt (Application af aa) = do
 
 parseArg :: Typeable a => Argument a -> Parser a
 parseArg aa  = tokenize $ do
-    opt <- parseValueStorage (extractKeywordParserList aa)
+    opt <- parseValueStorage (extractParserList aa)
     computeArg opt aa
 
 tokenize :: Parser a -> Parser a
@@ -119,14 +131,14 @@ parseQuotedString = quote $ many valueLetters
 class Parseable a where
     stdParser :: Parser a
 
-boolParser :: Parser Bool
-boolParser = (string "true" >> return True) <|> (string "false" >> return False)
+parseBool :: Parser Bool
+parseBool = (string "true" >> return True) <|> (string "false" >> return False)
 
 instance Parseable FlagRegisterMenuEntry where
-    stdParser = MkRegisterMenuEntryFlag <$> boolParser
+    stdParser = MkRegisterMenuEntryFlag <$> parseBool
 
 instance Parseable FlagIncludesMenu where
-    stdParser = MkIncMenuFlag <$> boolParser
+    stdParser = MkIncMenuFlag <$> parseBool
 
 instance Parseable TargetPath where
     stdParser = MkTargetPath <$> parseQuotedString
