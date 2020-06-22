@@ -96,10 +96,10 @@ optionalSepBy sep p = do
 
 pageInformationArg :: Argument PageInformation
 pageInformationArg = (Lift MkPageInformation)
-    <: FromKey "registerMenu" (stdParser)
-    <: FromKey "addMenu" (stdParser)
-    <: FromKey "path" (stdParser)
     <: FromKey "title" (stdParser)
+    <: FromKey "path" (stdParser)
+    <: FromFlag "addMenu" (MkIncMenuFlag)
+    <: FromFlag "registerMenu" (MkRegisterMenuEntryFlag)
 
 
 parsePageInformation :: Parser PageInformation

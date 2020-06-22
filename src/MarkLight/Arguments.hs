@@ -50,7 +50,7 @@ type ValueStorage = M.Map String Value
 data Argument a where
     FromKey :: Typeable a => String -> Parser a -> Argument a
     FromKeyDefault :: Typeable a => String -> Parser a -> a -> Argument a
-    FromFlag :: String -> Argument Bool
+    FromFlag :: Typeable a => String -> (Bool -> a) -> Argument a
     Application :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
     Lift :: Typeable a => a -> Argument a
 
@@ -72,7 +72,7 @@ flagParser key = do
 extractParserList :: Typeable a => Argument a -> [Parser (String, Value)]
 extractParserList (Lift _) = []
 extractParserList (FromKey key p) = [keyValueParser key p]
-extractParserList (FromFlag key) = [flagParser key]
+extractParserList (FromFlag key _) = [flagParser key]
 extractParserList (FromKeyDefault key p _) = [keyValueParser key p]
 extractParserList (Application f a) = extractParserList f ++ extractParserList a
 
@@ -95,11 +95,11 @@ computeArg opt (FromKey key _) = case M.lookup key opt of
         Just (MkValue val) -> case (cast val) of
                 Nothing -> fail "Type error: this should never happen"
                 Just a -> return a
-computeArg opt (FromFlag key) = case M.lookup key opt of
-        Nothing -> return False
+computeArg opt (FromFlag key f) = case M.lookup key opt of
+        Nothing -> return $ f False
         Just (MkValue val) -> case (cast val) of
                 Nothing -> fail "Type error: this should never happen"
-                Just a -> return a
+                Just a -> return $ f a
 computeArg opt (FromKeyDefault key _ def) = case M.lookup key opt of
         Nothing -> return $ def
         Just (MkValue val) -> case (cast val) of

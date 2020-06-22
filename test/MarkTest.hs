@@ -106,7 +106,7 @@ data Configuration = MkConfig { containsMenu :: Bool, isHome :: Bool } deriving 
 
 configurationArg :: Argument Configuration
 configurationArg = (Lift MkConfig)
-    <: FromFlag "containsMenu"
+    <: FromFlag "containsMenu" id
     <: FromKey "isHome" parseBool
 
 testArguments = TestLabel "Tests argument" $
