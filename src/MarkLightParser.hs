@@ -105,13 +105,6 @@ pageInformationArg = (Lift MkPageInformation)
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ parseArg pageInformationArg
 
--- do
---  opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "addMenu", "registerMenu"]) (MkPositionalKeys ["path","title"])
---  MkPageInformation <$> getArgument "title" opts
---    <*> getArgument "path" opts
---    <*> getArgumentWithDefault "addMenu" (MkIncMenuFlag False) opts
---    <*> getArgumentWithDefault "registerMenu" (MkRegisterMenuEntryFlag False) opts
-
 linkArg :: Argument LightAtom
 linkArg = Lift (Link)
     <: FromKey "path" (stdParser :: Parser URLPath)
@@ -119,11 +112,6 @@ linkArg = Lift (Link)
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ parseArg linkArg
-
--- do
---     opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title"]) (MkPositionalKeys ["path", "text"])
---     Link <$> (getArgument "path" opts)
---          <*> (getArgument "text" opts)
 
 bookArg :: Argument LightAtom
 bookArg = (Lift Book)
@@ -133,17 +121,6 @@ bookArg = (Lift Book)
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ parseArg bookArg
-
--- do
---   opts <- parseArgumentsWithDefaults (MkTotalKeys ["path", "title", "link"])
---     (MkPositionalKeys ["title", "author"])
---   case Book
---     <$> (getArgument "title" opts)
---     <*> (getArgument "author" opts)
---     <*> (getOptionalArgument "link" opts) of
---     Nothing -> fail "Arguments for author not present"
---     Just bk -> return bk
---
 
 pictureArg :: Argument LightBlock
 pictureArg = Lift Picture
@@ -156,26 +133,24 @@ parsePicture :: Parser LightBlock
 parsePicture = ensureStartOfLine *> (tokenizeBlock $
     braceCommand "picture" $ parseArg pictureArg)
 
+braced p = between (charToken '{') (charToken '}') p
 
--- $ do
---   opts <- parseArgumentsWithDefaults
---     (MkTotalKeys ["path", "title", "id", "style"])
---     (MkPositionalKeys ["path", "title", "id"])
---   Picture <$> (getArgument "path" opts)
---     <*> (getArgument "title" opts)
---     <*> (getArgument "id" opts)
---     <*> (getArgumentWithDefault "style" NoStyle opts))
+parseHFlex :: Parser LightBlock
+parseHFlex = ensureStartOfLine *> (tokenizeBlock $
+    braceCommand "hflex" $ do
+        hbs <- between (charToken '[') (charToken ']')
+            $ sepBy1 (braced $ mconcat <$> many1 parseBlock)
+            $ charToken ','
+        return $ HFlex $ hbs
+    )
+
 
 publicationListArg :: Argument LightBlock
-publicationListArg = Lift PublicationList <: FromKey "publication" stdParser
+publicationListArg = Lift PublicationList <: FromKey "src" stdParser
 
 parsePublicationList :: Parser LightBlock
 parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications"
     $ parseArg publicationListArg)
-
--- do
---   opts <- parseArgumentsWithDefaults (MkTotalKeys ["path"]) (MkPositionalKeys ["path"])
---   PublicationList <$> (getArgument "path" opts))
 
 parseHeader :: Parser LightBlock
 parseHeader = tokenizeBlock $ ensureStartOfLine *> do
@@ -219,10 +194,14 @@ parseComment = tokenizeBlock $ ensureStartOfLine *> do
     charToken '#'
     manyTill anyChar (newline) >> return Comment
 
+parsePreformated :: Parser LightBlock
+parsePreformated = ensureStartOfLine *> (tokenizeBlock
+    $ braceCommand "pre" $ Preformated <$> manyTill anyChar (lookAhead $ char '}'))
+
 parseBlock :: Parser LightBlock
 parseBlock = parseEnumeration
     <|> parseHeader <|> parseParagraph
-    <|> parseComment <|> parsePicture <|> parsePublicationList
+    <|> parseComment <|> parsePicture <|> parsePublicationList <|> parsePreformated <|> parseHFlex
 
 parsePage :: Parser Page
 parsePage = do
@@ -277,6 +256,8 @@ renderLightBlock Comment = return $ mempty
 renderLightBlock (PublicationList path) = do
     bib <- readResource path
     return $ BG.generateBibliography bib
+renderLightBlock (Preformated str) = return $ HI.pre $ HI.toHtml str
+renderLightBlock (HFlex lbs) = HI.flex <$> mconcat <$> map HI.div <$> traverse renderLightBlock lbs
 
 renderLightAtomList :: [LightAtom] -> HI.Html
 renderLightAtomList las = mconcat $ renderLightAtom <$> las

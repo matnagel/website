@@ -70,6 +70,7 @@ data LightBlock
   | Direct [LightAtom]
   | Header [LightAtom]
   | Enumeration [LightBlock]
+  | Preformated String
   | Picture URLPath Title CSSID Style
   | PublicationList LocalPath
   | Comment

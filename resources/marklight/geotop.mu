@@ -1,6 +1,6 @@
 {page path="geotop.html", title="Introduction to 3-manifolds"}
 
-{picture "https://people.math.ethz.ch/~managel/website/images/braid.jpg" "A braid" id="braid"}
+{picture path="https://people.math.ethz.ch/~managel/website/images/braid.jpg" title="A braid" id="braid" style=nostyle}
 
 = Announcement
 
@@ -9,18 +9,18 @@ I will provide you with recorded lectures, which are complemented by zoom meetin
 
 = Homework
 
-- {link "https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework1.pdf" "Homework 1"} 
-- {link "https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework2.pdf" "Homework 2"}
-- {link "https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework3.pdf" "Homework 3"}
-- {link "https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework4.pdf" "Homework 4"}
+- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework1.pdf" text="Homework 1"} 
+- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework2.pdf" text="Homework 2"}
+- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework3.pdf" text="Homework 3"}
+- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework4.pdf" text="Homework 4"}
 
 = Textbooks
 
-- {book "Knots and links" "D. Rolfsen"}
-- {book "3-manifolds" "J. Hempel"}
-- {book "Differential Topology" "T. Bröcker, K. Jänich"}
-- {book "Differential Topology" "C. Wall"}
-- {book "Diffeomorphism groups of disks" "A. Kupers" 
+- {book title="Knots and links" author="D. Rolfsen"}
+- {book title="3-manifolds" author="J. Hempel"}
+- {book title="Differential Topology" author="T. Bröcker, K. Jänich"}
+- {book title="Differential Topology" author="C. Wall"}
+- {book title="Diffeomorphism groups of disks" author="A. Kupers" 
 	link="http://people.math.harvard.edu/~kupers/teaching/272x/index.html"}
 
 = Contact
