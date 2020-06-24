@@ -31,12 +31,12 @@ div,
 style,
 (<>),
 MenuEntry(..),
-HasMenu(..)
+HasMenu(..),
+PictureSize (..)
 ) where
 
 import Prelude hiding (head, div, id)
 import Text.Blaze.Html5 ( (!), Html )
---import Text.Blaze.Html5 hiding (link, title, style)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
@@ -52,6 +52,14 @@ class (Monad m) => HasMenu m where
 data MenuEntry = MkMenuEntry TargetPath Title
 
 renderMenuEntry (MkMenuEntry (MkTargetPath url) (MkTitle name)) = link url name
+
+
+class ToCSS a where
+    toCSS :: a -> H.Attribute
+
+instance ToCSS PictureSize where
+    toCSS (MkSizeHeight h) = A.style $ fromString $ "height:" ++ (show h) ++ "ex"
+    toCSS (MkSizeWidth h) = A.style $ fromString $ "width:" ++ (show h) ++ "ex"
 
 style = A.style
 pre = H.pre
@@ -86,7 +94,8 @@ addheader mtitle = H.head $ do
 
 flex = divClass "flex"
 
-image url desc pid = H.img ! A.src (fromString url) ! A.alt (fromString desc) ! A.id (fromString pid)
+image :: String -> String -> PictureSize -> Html
+image url desc size = H.img ! A.src (fromString url) ! A.alt (fromString desc) ! toCSS size
 
 link :: String -> String -> Html
 link url name = H.a ! A.href (fromString url) $ (fromString name)

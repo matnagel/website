@@ -22,6 +22,7 @@ dependencies:
 - bytestring
 - aeson
 - parsec
+- parsec-numbers
 - containers
 - HUnit
 - optics

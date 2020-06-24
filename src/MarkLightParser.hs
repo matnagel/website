@@ -93,14 +93,12 @@ optionalSepBy sep p = do
             ps <- p
             return (ss:ps:[])
 
-
 pageInformationArg :: Argument PageInformation
 pageInformationArg = (Lift MkPageInformation)
     <: FromKey "title" (stdParser)
     <: FromKey "path" (stdParser)
     <: FromFlag "addMenu" (MkIncMenuFlag)
     <: FromFlag "registerMenu" (MkRegisterMenuEntryFlag)
-
 
 parsePageInformation :: Parser PageInformation
 parsePageInformation = tokenizeBlock $ braceCommand "page" $ parseArg pageInformationArg
@@ -126,7 +124,7 @@ pictureArg :: Argument LightBlock
 pictureArg = Lift Picture
     <: FromKey "path" (MkURLPath <$> parseQuotedString)
     <: FromKey "title" (MkTitle <$> parseQuotedString)
-    <: FromKey "id" (MkID <$> parseQuotedString)
+    <: FromKey "size" stdParser
     <: FromKey "style" (stdParser)
 
 parsePicture :: Parser LightBlock
@@ -250,8 +248,8 @@ renderLightBlock (Direct las) = return $ renderLightAtomList las
 renderLightBlock (Enumeration las) = do
     blocks <- traverse renderLightBlock las
     return $ HI.ul $ mconcat $ HI.li <$> blocks
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id) NoStyle) = return $ HI.image path title id
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) (MkID id) StyleCentered) = return $ (HI.flex HI.! HI.style "justify-content:center; margin:2ex" $ HI.image path title id)
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) size NoStyle) = return $ HI.image path title size
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) size StyleCentered) = return $ (HI.flex HI.! HI.style "justify-content:center; margin:2ex" $ HI.image path title $ size)
 renderLightBlock Comment = return $ mempty
 renderLightBlock (PublicationList path) = do
     bib <- readResource path

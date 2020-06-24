@@ -34,6 +34,8 @@ import Text.Parsec
     string,
     try
   )
+
+import Text.ParserCombinators.Parsec.Number
 import Text.Parsec.Char
 import Text.Parsec.Combinator (between, sepBy, sepBy1)
 import Text.Parsec.String
@@ -161,3 +163,7 @@ instance Parseable URLPath where
 instance Parseable Style where
     stdParser = (string "centered" >> (return $ StyleCentered))
         <|> (string "nostyle" >> return NoStyle)
+
+instance Parseable PictureSize where
+    stdParser = (string "height:" >> MkSizeHeight <$> floating)
+        <|> (string "width:" >> MkSizeWidth <$> floating)

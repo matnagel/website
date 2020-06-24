@@ -1,6 +1,6 @@
 {page path="geotop.html", title="Introduction to 3-manifolds"}
 
-{picture path="https://people.math.ethz.ch/~managel/website/images/braid.jpg" title="A braid" id="braid" style=nostyle}
+{picture path="https://people.math.ethz.ch/~managel/website/images/braid.jpg" title="A braid" size=height:40.0 style=nostyle}
 
 = Announcement
 

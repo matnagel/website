@@ -127,6 +127,9 @@ testArguments = TestLabel "Tests argument" $
         cFailArgParser
             "Double firstname"
             "fname=\"Tom\", lname=\"Rattle\", fname=\"Zippo\"",
+        cFailArgParser
+            "Unknown key"
+            "fname=\"Tom\", lname=\"Rattle\", id=\"Zippo\"",
         cConfigParser
             "Parse Flags and Bools"
             "MkConfig {containsMenu = True, isHome = True}"

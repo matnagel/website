@@ -8,7 +8,6 @@ module MarkLight.Types
     Title (..),
     Author (..),
     Text (..),
-    CSSID (..),
     ReadLocal (..),
     WriteLocal (..),
     LightAtom (..),
@@ -18,6 +17,7 @@ module MarkLight.Types
     FlagIncludesMenu(..),
     FlagRegisterMenuEntry(..),
     Style (..),
+    PictureSize (..)
   )
 where
 
@@ -48,12 +48,12 @@ newtype Author = MkAuthor String deriving (Eq, Show)
 
 newtype Text = MkText String deriving (Eq, Show)
 
-newtype CSSID = MkID String deriving (Eq, Show)
-
 newtype FlagIncludesMenu = MkIncMenuFlag Bool deriving (Eq, Show)
 newtype FlagRegisterMenuEntry = MkRegisterMenuEntryFlag Bool deriving (Eq, Show)
 
 data Style = NoStyle | StyleCentered deriving (Eq, Show)
+
+data PictureSize = MkSizeHeight Float | MkSizeWidth Float deriving (Eq, Show)
 
 data LightAtom
   = Word String
@@ -71,7 +71,7 @@ data LightBlock
   | Header [LightAtom]
   | Enumeration [LightBlock]
   | Preformated String
-  | Picture URLPath Title CSSID Style
+  | Picture URLPath Title PictureSize Style
   | PublicationList LocalPath
   | Comment
   deriving (Eq, Show)

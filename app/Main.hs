@@ -10,7 +10,6 @@ import Control.Monad.Fix
 import Text.Blaze.Html.Renderer.String
 import GHC.IO.Encoding
 import Data.String
-import MyContent
 
 import qualified HtmlInterface as HI
 import HtmlInterface(HasMenu(..))
