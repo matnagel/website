@@ -7,13 +7,11 @@ publicationPage,
 algTopPage,
 geoTopPage,
 miscPage,
-topSemPage
 ) where
 
 import Prelude hiding (div)
 import BibliographyGenerator
 import CoursePages (algTopPage, geoTopPage)
-import TopologySeminar (topSemPage)
 import MiscPage (miscPage)
 import TeachingPage
 import HtmlInterface

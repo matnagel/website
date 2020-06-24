@@ -14,8 +14,8 @@ import MyContent
 
 import qualified HtmlInterface as HI
 import HtmlInterface(HasMenu(..))
-import Interpretation.ConstructEnvInt
-import Interpretation.RunEnvInt
+import Effects.ConstructEnvironment
+import Effects.RunWithEnvironment
 
 import MarkLightParser
 import MarkLight.Types
