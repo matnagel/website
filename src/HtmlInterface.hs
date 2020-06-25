@@ -45,6 +45,17 @@ import MarkLight.Types
 import Data.String
 import Data.Monoid
 
+data HtmlInline = Newline
+    | Space
+    | Text String
+
+data HtmlLang = Monoid [HtmlLang]
+    | Paragraph HtmlInline
+    | Header Title
+    | Div HtmlLang
+    | Picture URLPath Text PictureSize
+    | HFlex [HtmlLang]
+
 class (Monad m) => HasMenu m where
   getMenu :: m Html
   registerMenu :: MenuEntry -> m ()
@@ -52,7 +63,6 @@ class (Monad m) => HasMenu m where
 data MenuEntry = MkMenuEntry TargetPath Title
 
 renderMenuEntry (MkMenuEntry (MkTargetPath url) (MkTitle name)) = link url name
-
 
 class ToCSS a where
     toCSS :: a -> H.Attribute
@@ -121,15 +131,6 @@ mathjax = do
   H.script ! A.type_ "text/javascript"
     ! A.src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML"
     $ mempty
-
--- menuBlock = do
---         divId "menu" $ do
---             divId "logo" $ do
---                 link "./index.html" $ "Home"
---             divId "navigation" $ do
---                 link "./teaching.html" $ "Teaching"
---                 link "./publications.html" $ "Publications"
---                 link "./misc.html" $ "Misc"
 
 menuBlock = menuBlockFromList [
     MkMenuEntry "./teaching.html" "Teaching",

@@ -94,38 +94,39 @@ optionalSepBy sep p = do
             return (ss:ps:[])
 
 pageInformationArg :: Argument PageInformation
-pageInformationArg = (Lift MkPageInformation)
-    <: FromKey "title" (stdParser)
-    <: FromKey "path" (stdParser)
-    <: FromFlag "addMenu" (MkIncMenuFlag)
-    <: FromFlag "registerMenu" (MkRegisterMenuEntryFlag)
+pageInformationArg = MkPageInformation
+    <$>| FromKey "title" (stdParser)
+    <*>| FromKey "path" (stdParser)
+    <*>| FromFlag "addMenu" (MkIncMenuFlag)
+    <*>| FromFlag "registerMenu" (MkRegisterMenuEntryFlag)
 
 parsePageInformation :: Parser PageInformation
-parsePageInformation = tokenizeBlock $ braceCommand "page" $ parseArg pageInformationArg
+parsePageInformation = tokenizeBlock $ braceCommand "page"
+    $ parseArg pageInformationArg
 
 linkArg :: Argument LightAtom
-linkArg = Lift (Link)
-    <: FromKey "path" (stdParser :: Parser URLPath)
-    <: FromKey "text" (stdParser :: Parser Text)
+linkArg = Link
+    <$>| FromKey "path" (stdParser :: Parser URLPath)
+    <*>| FromKey "text" (stdParser :: Parser Text)
 
 parseLink :: Parser LightAtom
 parseLink = braceCommand "link" $ parseArg linkArg
 
 bookArg :: Argument LightAtom
-bookArg = (Lift Book)
-    <: FromKey "title" stdParser
-    <: FromKey "author" stdParser
-    <: FromKeyDefault "link" (return <$> stdParser) Nothing
+bookArg = Book
+    <$>| FromKey "title" stdParser
+    <*>| FromKey "author" stdParser
+    <*>| FromKeyDefault "link" (return <$> stdParser) Nothing
 
 parseBook :: Parser LightAtom
 parseBook = braceCommand "book" $ parseArg bookArg
 
 pictureArg :: Argument LightBlock
-pictureArg = Lift Picture
-    <: FromKey "path" (MkURLPath <$> parseQuotedString)
-    <: FromKey "title" (MkTitle <$> parseQuotedString)
-    <: FromKey "size" stdParser
-    <: FromKey "style" (stdParser)
+pictureArg = Picture
+    <$>| FromKey "path" (MkURLPath <$> parseQuotedString)
+    <*>| FromKey "title" (MkTitle <$> parseQuotedString)
+    <*>| FromKey "size" stdParser
+    <*>| FromKey "style" (stdParser)
 
 parsePicture :: Parser LightBlock
 parsePicture = ensureStartOfLine *> (tokenizeBlock $
@@ -142,9 +143,8 @@ parseHFlex = ensureStartOfLine *> (tokenizeBlock $
         return $ HFlex $ hbs
     )
 
-
 publicationListArg :: Argument LightBlock
-publicationListArg = Lift PublicationList <: FromKey "src" stdParser
+publicationListArg = PublicationList <$>| FromKey "src" stdParser
 
 parsePublicationList :: Parser LightBlock
 parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications"
@@ -249,13 +249,16 @@ renderLightBlock (Enumeration las) = do
     blocks <- traverse renderLightBlock las
     return $ HI.ul $ mconcat $ HI.li <$> blocks
 renderLightBlock (Picture (MkURLPath path) (MkTitle title) size NoStyle) = return $ HI.image path title size
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) size StyleCentered) = return $ (HI.flex HI.! HI.style "justify-content:center; margin:2ex" $ HI.image path title $ size)
+renderLightBlock (Picture (MkURLPath path) (MkTitle title) size StyleCentered) = return
+    $ HI.flex HI.! HI.style "justify-content:center; margin:2ex"
+        $ HI.image path title size
 renderLightBlock Comment = return $ mempty
 renderLightBlock (PublicationList path) = do
     bib <- readResource path
     return $ BG.generateBibliography bib
 renderLightBlock (Preformated str) = return $ HI.pre $ HI.toHtml str
-renderLightBlock (HFlex lbs) = HI.flex <$> mconcat <$> map HI.div <$> traverse renderLightBlock lbs
+renderLightBlock (HFlex lbs) = HI.flex <$> mconcat
+    <$> map HI.div <$> traverse renderLightBlock lbs
 
 renderLightAtomList :: [LightAtom] -> HI.Html
 renderLightAtomList las = mconcat $ renderLightAtom <$> las

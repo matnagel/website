@@ -92,22 +92,22 @@ testCommands =
 data Person = MkPerson { firstname :: String, lastname :: String } deriving Show
 
 personArg :: Argument Person
-personArg = (Lift MkPerson)
-    <: FromKey "fname" parseQuotedString
-    <: FromKey "lname" parseQuotedString
+personArg = MkPerson
+    <$>| FromKey "fname" parseQuotedString
+    <*>| FromKey "lname" parseQuotedString
 
 personArgDefault :: Argument Person
-personArgDefault = (Lift MkPerson)
-    <: FromKeyDefault "fname" parseQuotedString "Bill"
-    <: FromKey "lname" parseQuotedString
+personArgDefault = MkPerson
+    <$>| FromKeyDefault "fname" parseQuotedString "Bill"
+    <*>| FromKey "lname" parseQuotedString
 
 
 data Configuration = MkConfig { containsMenu :: Bool, isHome :: Bool } deriving Show
 
 configurationArg :: Argument Configuration
-configurationArg = (Lift MkConfig)
-    <: FromFlag "containsMenu" id
-    <: FromKey "isHome" parseBool
+configurationArg = MkConfig
+    <$>| FromFlag "containsMenu" id
+    <*>| FromKey "isHome" parseBool
 
 testArguments = TestLabel "Tests argument" $
     TestList

@@ -9,7 +9,8 @@ module MarkLight.Arguments
     parseQuotedString,
     parseBool,
     Parseable (..),
-    (<:)
+    (<*>|),
+    (<$>|)
   )
 where
 
@@ -56,8 +57,12 @@ data Argument a where
     Application :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
     Lift :: Typeable a => a -> Argument a
 
-(<:) :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
-(<:) = Application
+(<*>|) :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
+(<*>|) = Application
+
+(<$>|) :: (Typeable a, Typeable b) => (a->b) -> Argument a -> Argument b
+(<$>|) f a = (Lift f) <*>| a
+
 
 keyValueParser :: Typeable a => String -> Parser a -> Parser (String, Value)
 keyValueParser key p = do
