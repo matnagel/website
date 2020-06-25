@@ -14,7 +14,7 @@ I am a postdoc on the job market. Here is a {link path="https://people.math.ethz
 ]}
 
 
-= Interests
+= My Interests
 
 My field of study is geometric topology. I am interested in geometric objects up to dimension 4 and their embeddings. In particular, I study knots and their mathematical properties. Here is an example of an interesting (part of a) knot:
 

@@ -14,6 +14,8 @@ module MarkLight.Arguments
   )
 where
 
+import Types
+
 import Control.Monad
 import Control.Applicative
 import Data.Traversable

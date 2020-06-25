@@ -84,10 +84,16 @@ testCommands =
         cLink
           "Correct link with newline"
           "Link (MkURLPath \"test.path/succ\") (MkText \"my link.\")"
-          "{link\n path=\"test.path/succ\"\n text=\"my link.\"}"
+          "{link\n path=\"test.path/succ\"\n text=\"my link.\"}",
+        cHeader
+          "Correct header with space"
+          "Header (MkText \"My Interests\")"
+          "= My Interests"
+
       ]
   where
     cLink = createParseTest parseLink
+    cHeader = createParseTest parseHeader
 
 data Person = MkPerson { firstname :: String, lastname :: String } deriving Show
 

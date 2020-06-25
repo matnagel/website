@@ -2,14 +2,7 @@
 {-# LANGUAGE GADTs #-}
 
 module MarkLight.Types
-  ( URLPath (..),
-    LocalPath (..),
-    TargetPath (..),
-    Title (..),
-    Author (..),
-    Text (..),
-    ReadLocal (..),
-    WriteLocal (..),
+  (
     LightAtom (..),
     LightBlock (..),
     PageInformation (..),
@@ -17,43 +10,15 @@ module MarkLight.Types
     FlagIncludesMenu(..),
     FlagRegisterMenuEntry(..),
     Style (..),
-    PictureSize (..)
   )
 where
 
-import Control.Monad
-import Data.String
-import qualified Data.Map as M
-import Optics
-import Prelude hiding (div, head, id)
-
-newtype URLPath = MkURLPath String deriving (Eq, Show)
-
-newtype LocalPath = MkLocalPath String deriving (Eq, Show)
-
-instance IsString LocalPath where
-    fromString path = MkLocalPath path
-
-newtype TargetPath = MkTargetPath String deriving (Show)
-
-instance IsString TargetPath where
-    fromString str = MkTargetPath str
-
-newtype Title = MkTitle String deriving (Eq, Show)
-
-instance IsString Title where
-    fromString str = MkTitle str
-
-newtype Author = MkAuthor String deriving (Eq, Show)
-
-newtype Text = MkText String deriving (Eq, Show)
+import Types
 
 newtype FlagIncludesMenu = MkIncMenuFlag Bool deriving (Eq, Show)
 newtype FlagRegisterMenuEntry = MkRegisterMenuEntryFlag Bool deriving (Eq, Show)
 
 data Style = NoStyle | StyleCentered deriving (Eq, Show)
-
-data PictureSize = MkSizeHeight Float | MkSizeWidth Float deriving (Eq, Show)
 
 data LightAtom
   = Word String
@@ -68,8 +33,8 @@ data LightBlock
   | HFlex [LightBlock]
   | Para [LightAtom]
   | Direct [LightAtom]
-  | Header [LightAtom]
-  | Enumeration [LightBlock]
+  | Header Text
+  | Enumeration [[LightAtom]]
   | Preformated String
   | Picture URLPath Title PictureSize Style
   | PublicationList LocalPath
@@ -96,9 +61,3 @@ data PageInformation = MkPageInformation
 data Page = MkPage
     { getPageMetadata :: PageInformation,
       getContent :: LightBlock } deriving (Show)
-
-class (Monad m) => ReadLocal m where
-  readResource :: LocalPath -> m String
-
-class (Monad m) => WriteLocal m where
-    writeResource :: LocalPath -> String -> m ()

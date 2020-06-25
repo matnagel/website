@@ -32,7 +32,9 @@ style,
 (<>),
 MenuEntry(..),
 HasMenu(..),
-PictureSize (..)
+CoreInlineElement (..),
+CoreHtml (..),
+compileHtml
 ) where
 
 import Prelude hiding (head, div, id)
@@ -40,21 +42,59 @@ import Text.Blaze.Html5 ( (!), Html )
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
-import MarkLight.Types
+-- import qualified MarkLight.Types as ML
+import Types
 
 import Data.String
 import Data.Monoid
 
-data HtmlInline = Newline
+data CoreInlineElement = Newline
     | Space
+    | Em CoreInline
     | Text String
+    | Link URLPath Text
 
-data HtmlLang = Monoid [HtmlLang]
-    | Paragraph HtmlInline
-    | Header Title
-    | Div HtmlLang
+type CoreInline = [CoreInlineElement]
+
+compileInline :: CoreInlineElement -> Html
+compileInline Newline = br
+compileInline Space = toHtml (" " :: String)
+compileInline (Text str) = toHtml str
+compileInline (Link (MkURLPath url) (MkText text)) = H.a
+    ! A.href (fromString url) $ (fromString text)
+compileInline (Em inline) = H.em $ mconcat $ compileInline <$> inline
+
+data CoreHtml = Monoid [CoreHtml]
+    | Paragraph CoreInline
+    | Direct CoreInline
+    | Header Text
+    | Pre String
+    | Enumeration [CoreInline]
+    | Div CoreHtml
     | Picture URLPath Text PictureSize
-    | HFlex [HtmlLang]
+    | HFlex [CoreHtml]
+    | Lift Html
+
+compileHtml :: CoreHtml -> Html
+compileHtml (Monoid hls) = mconcat $ compileHtml <$> hls
+compileHtml (Paragraph para) = H.p $ mconcat $ compileInline <$> para
+compileHtml (Header (MkText text)) = H.p $ headline $ toHtml text
+compileHtml (Pre text) = H.pre $ toHtml text
+compileHtml (Div hl) = H.div $ compileHtml hl
+compileHtml (Picture (MkURLPath path) (MkText text) size) = image path text size
+compileHtml (HFlex hls) = flex $ mconcat $ compileHtml <$> hls
+compileHtml (Lift hl) = hl
+compileHtml (Enumeration [inline]) = H.li $ mconcat $ H.ul . compileInline <$> inline
+
+instance Semigroup CoreHtml where
+  (<>) (Monoid a) (Monoid b) = Monoid (a <> b)
+  (<>) a@(Monoid _) b = a <> Monoid [b]
+  (<>) a b@(Monoid _) = Monoid [a] <> b
+  (<>) a b = Monoid [a, b]
+
+instance Monoid CoreHtml where
+  mempty = Monoid []
+
 
 class (Monad m) => HasMenu m where
   getMenu :: m Html

@@ -10,7 +10,8 @@ module MarkLightParser
     parseParagraph,
     parseLink,
     ReadLocal(..),
-    WriteLocal(..)
+    WriteLocal(..),
+    parseHeader
   )
 where
 
@@ -43,6 +44,7 @@ import qualified BibliographyGenerator as BG
 import Prelude hiding (div, head, id)
 
 import MarkLight.Arguments
+import Types
 import MarkLight.Types
 
 -- Tokenized character sets for paragraphs
@@ -153,8 +155,8 @@ parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publi
 parseHeader :: Parser LightBlock
 parseHeader = tokenizeBlock $ ensureStartOfLine *> do
   charToken '='
-  hdr <- many1 parseWord
-  return $ Header hdr
+  hdr <- many1 (wordLetter <|> blank)
+  return $ Header $ MkText hdr
 
 removeRedundantSpaces :: [LightAtom] -> [LightAtom]
 removeRedundantSpaces [] = []
@@ -166,20 +168,19 @@ removeRedundantSpaces (x:xs) = x:removeRedundantSpaces xs
 parseAtom :: Parser LightAtom
 parseAtom = (parseLinebreak <|> parseWord <|> parseLink <|> parseBook)
 
+parseInline :: Parser [LightAtom]
+parseInline = removeRedundantSpaces <$> optionalSepBy parseSpace parseAtom
+
 parseParagraph :: Parser LightBlock
-parseParagraph = tokenizeBlock $ do
-  text <- optionalSepBy parseSpace parseAtom
-  return $ Para $ removeRedundantSpaces text
+parseParagraph = tokenizeBlock $ Para <$> parseInline
 
 parseDirect :: Parser LightBlock
-parseDirect = tokenizeBlock $ do
-  text <- optionalSepBy parseSpace parseAtom
-  return $ Direct $ removeRedundantSpaces text
+parseDirect = tokenizeBlock $ Direct <$> parseInline
 
-parseEnumItem :: Parser LightBlock
+parseEnumItem :: Parser [LightAtom]
 parseEnumItem = tokenize $ ensureStartOfLine *> do
     charToken '-'
-    block <- parseDirect
+    block <- parseInline
     return block
 
 parseEnumeration :: Parser LightBlock
@@ -215,7 +216,7 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 
 interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m HI.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
-    blocks <- renderLightBlock lightblock
+    blocks <- HI.compileHtml <$> translateLightBlock lightblock
     checkAndRegisterMenuEntry pageinfo
     generatePageHeader pageinfo blocks
 
@@ -240,33 +241,28 @@ renderPageTitle :: PageInformation -> HI.Html
 renderPageTitle pi = case getPageTitle pi of
     MkTitle title -> HI.toHtml title
 
-renderLightBlock :: ReadLocal m => LightBlock -> m HI.Html
-renderLightBlock (Header las) = return $ HI.headline (renderLightAtomList las)
-renderLightBlock (Plain lbs) = mconcat <$> traverse renderLightBlock lbs
-renderLightBlock (Para las) = return $ HI.p $ (renderLightAtomList las)
-renderLightBlock (Direct las) = return $ renderLightAtomList las
-renderLightBlock (Enumeration las) = do
-    blocks <- traverse renderLightBlock las
-    return $ HI.ul $ mconcat $ HI.li <$> blocks
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) size NoStyle) = return $ HI.image path title size
-renderLightBlock (Picture (MkURLPath path) (MkTitle title) size StyleCentered) = return
-    $ HI.flex HI.! HI.style "justify-content:center; margin:2ex"
-        $ HI.image path title size
-renderLightBlock Comment = return $ mempty
-renderLightBlock (PublicationList path) = do
+translateLightBlock :: ReadLocal m => LightBlock -> m HI.CoreHtml
+translateLightBlock (Header las) = return $ HI.Header $ las
+translateLightBlock (Plain lbs) = mconcat <$> traverse translateLightBlock lbs
+translateLightBlock (Para las) = return $ HI.Paragraph $ las >>= translateLightAtom
+translateLightBlock (Direct las) = return $ HI.Direct $ las >>= translateLightAtom
+translateLightBlock (Enumeration las) = return $ HI.Enumeration
+    $ (\inline -> inline >>= translateLightAtom) <$> las
+translateLightBlock (Picture (MkURLPath path) (MkTitle title) size NoStyle) = return $ HI.Lift $ HI.image path title size
+translateLightBlock (Picture (MkURLPath path) (MkTitle title) size StyleCentered) = return $ HI.Lift $
+    HI.flex HI.! HI.style "justify-content:center; margin:2ex"
+  $ HI.image path title size
+translateLightBlock Comment = return $ mempty
+translateLightBlock (PublicationList path) = do
     bib <- readResource path
-    return $ BG.generateBibliography bib
-renderLightBlock (Preformated str) = return $ HI.pre $ HI.toHtml str
-renderLightBlock (HFlex lbs) = HI.flex <$> mconcat
-    <$> map HI.div <$> traverse renderLightBlock lbs
+    return $ HI.Lift $ BG.generateBibliography bib
+translateLightBlock (Preformated str) = return $ HI.Pre str
+translateLightBlock (HFlex lbs) = HI.HFlex <$> map HI.Div <$> traverse translateLightBlock lbs
 
-renderLightAtomList :: [LightAtom] -> HI.Html
-renderLightAtomList las = mconcat $ renderLightAtom <$> las
-
-renderLightAtom :: LightAtom -> HI.Html
-renderLightAtom (Word str) = HI.toHtml str
-renderLightAtom (Link (MkURLPath path) (MkText txt)) = HI.link path txt
-renderLightAtom Space = HI.toHtml (" " :: String)
-renderLightAtom Newline = HI.br
-renderLightAtom (Book (MkTitle title) (MkAuthor author) Nothing) = (HI.em $ HI.toHtml $ title) <> (HI.toHtml $ " by " ++ author)
-renderLightAtom (Book (MkTitle title) (MkAuthor author) (Just (MkURLPath path))) = (HI.em $ HI.link path title) <> (HI.toHtml $ " by " ++ author)
+translateLightAtom :: LightAtom -> [HI.CoreInlineElement]
+translateLightAtom (Word str) = return $ HI.Text str
+translateLightAtom (Link path txt) = return $ HI.Link path txt
+translateLightAtom Space = return $ HI.Space
+translateLightAtom Newline = return $ HI.Newline
+translateLightAtom (Book (MkTitle title) (MkAuthor author) Nothing) = [(HI.Em $ [HI.Text $ title]), (HI.Text $ " by " ++ author)]
+translateLightAtom (Book (MkTitle title) (MkAuthor author) (Just path)) = [(HI.Em $ [HI.Link path (MkText title)]), (HI.Text $ " by " ++ author)]

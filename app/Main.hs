@@ -18,6 +18,7 @@ import Effects.RunWithEnvironment
 
 import MarkLightParser
 import MarkLight.Types
+import Types
 
 import Data.Time.Clock
 import System.FilePath
