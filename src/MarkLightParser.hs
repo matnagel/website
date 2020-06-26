@@ -255,9 +255,9 @@ translateLightBlock (Picture (MkURLPath path) (MkTitle title) size StyleCentered
 translateLightBlock Comment = return $ mempty
 translateLightBlock (PublicationList path) = do
     bib <- readResource path
-    return $ HI.Lift $ BG.generateBibliography bib
+    return $ BG.generateBibliography bib
 translateLightBlock (Preformated str) = return $ HI.Pre str
-translateLightBlock (HFlex lbs) = HI.HFlex <$> map HI.Div <$> traverse translateLightBlock lbs
+translateLightBlock (HFlex lbs) = HI.HFlex <$> traverse translateLightBlock lbs
 
 translateLightAtom :: LightAtom -> [HI.CoreInlineElement]
 translateLightAtom (Word str) = return $ HI.Text str

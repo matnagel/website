@@ -1,5 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 
 module HtmlInterface (
 addheader,
@@ -22,7 +25,6 @@ h2,
 li,
 em,
 ul,
-pre,
 toHtml,
 storageETH,
 divClass,
@@ -34,35 +36,48 @@ MenuEntry(..),
 HasMenu(..),
 CoreInlineElement (..),
 CoreHtml (..),
-compileHtml
+CoreInline (..),
+compileHtml,
+cssClass
 ) where
 
-import Prelude hiding (head, div, id)
+import Prelude hiding (head, div)
 import Text.Blaze.Html5 ( (!), Html )
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
--- import qualified MarkLight.Types as ML
 import Types
 
 import Data.String
+import Data.Maybe
 import Data.Monoid
+
+import Optics.TH
+import Optics
 
 data CoreInlineElement = Newline
     | Space
-    | Em CoreInline
     | Text String
+    | Em [CoreInlineElement]
     | Link URLPath Text
 
 type CoreInline = [CoreInlineElement]
 
-compileInline :: CoreInlineElement -> Html
-compileInline Newline = br
-compileInline Space = toHtml (" " :: String)
-compileInline (Text str) = toHtml str
-compileInline (Link (MkURLPath url) (MkText text)) = H.a
+compileInlineElement :: CoreInlineElement -> Html
+compileInlineElement Newline = H.br
+compileInlineElement Space = H.toHtml (" " :: String)
+compileInlineElement (Text str) = H.toHtml str
+compileInlineElement (Link (MkURLPath url) (MkText text)) = H.a
     ! A.href (fromString url) $ (fromString text)
-compileInline (Em inline) = H.em $ mconcat $ compileInline <$> inline
+compileInlineElement (Em ins) =  H.em $ mconcat $ compileInlineElement <$> ins
+
+data CSS = MkCSS { _cssClass :: Maybe String }
+
+makeLenses ''CSS
+
+emptyCSS = MkCSS Nothing
+
+type CSSTransformation = CSS -> CSS
 
 data CoreHtml = Monoid [CoreHtml]
     | Paragraph CoreInline
@@ -70,21 +85,33 @@ data CoreHtml = Monoid [CoreHtml]
     | Header Text
     | Pre String
     | Enumeration [CoreInline]
-    | Div CoreHtml
+    | Div CSSTransformation CoreHtml
     | Picture URLPath Text PictureSize
     | HFlex [CoreHtml]
     | Lift Html
 
+compileInline :: CoreInline -> Html
+compileInline cin = mconcat $ compileInlineElement <$> cin
+
+compileCSS :: CSSTransformation -> H.Attribute
+compileCSS f = mconcat $ catMaybes [A.class_ . fromString <$> (view cssClass css)]
+    where css = f emptyCSS
+
 compileHtml :: CoreHtml -> Html
 compileHtml (Monoid hls) = mconcat $ compileHtml <$> hls
-compileHtml (Paragraph para) = H.p $ mconcat $ compileInline <$> para
+compileHtml (Direct hls) = compileInline hls
+compileHtml (Paragraph para) = H.p $ mconcat $ compileInlineElement <$> para
 compileHtml (Header (MkText text)) = H.p $ headline $ toHtml text
 compileHtml (Pre text) = H.pre $ toHtml text
-compileHtml (Div hl) = H.div $ compileHtml hl
+compileHtml (Div trans hl) = (H.div H.! compileCSS trans) $ compileHtml hl
 compileHtml (Picture (MkURLPath path) (MkText text) size) = image path text size
-compileHtml (HFlex hls) = flex $ mconcat $ compileHtml <$> hls
+compileHtml (HFlex hls) = flex $ mconcat $ compileHtml <$> encapsulateMonoid <$> hls
 compileHtml (Lift hl) = hl
-compileHtml (Enumeration [inline]) = H.li $ mconcat $ H.ul . compileInline <$> inline
+compileHtml (Enumeration inline) = H.li $ mconcat $ H.ul . compileInline <$> inline
+
+encapsulateMonoid :: CoreHtml -> CoreHtml
+encapsulateMonoid (Monoid ls) = Div id (Monoid ls)
+encapsulateMonoid x = x
 
 instance Semigroup CoreHtml where
   (<>) (Monoid a) (Monoid b) = Monoid (a <> b)
@@ -94,7 +121,6 @@ instance Semigroup CoreHtml where
 
 instance Monoid CoreHtml where
   mempty = Monoid []
-
 
 class (Monad m) => HasMenu m where
   getMenu :: m Html

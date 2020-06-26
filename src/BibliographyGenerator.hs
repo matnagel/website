@@ -16,13 +16,16 @@ import Data.Traversable
 import HtmlInterface
 import Utility.Separators
 
+import Types
+import Optics
+
 data Journal = Journal { jname::String,
                          jvol::String } deriving (Show)
 
 data Arxiv = Arxiv String deriving (Show)
 
-renderJournal :: Journal -> Html
-renderJournal j = toHtml (jname j) <> " " <> toHtml (jvol j)
+renderJournal :: Journal -> CoreInline
+renderJournal j = [Text (jname j), Space, Text (jvol j)]
 
 instance FromJSON Journal where
     parseJSON (Object v) = Journal <$>
@@ -42,7 +45,7 @@ data Publication = Pub {
 
 instance FromJSON Publication where
     parseJSON (Object v) = Pub
-                   <$>  v .:?  "Coauthors"
+                   <$>  v .:? "Coauthors"
                    <*>  v .:? "Journal"
                    <*>  v .:? "Arxiv"
                    <*>  v .:  "Title"
@@ -53,33 +56,34 @@ instance FromJSON Publication where
 instance FromJSON Arxiv where
     parseJSON v = Arxiv <$> parseJSON v
 
-renderArxiv :: Arxiv -> Html
-renderArxiv (Arxiv str) =  link url str
+renderArxiv :: Arxiv -> CoreInline
+renderArxiv (Arxiv str) = [Link (MkURLPath url) (MkText str)]
                 where url = "https://arxiv.org/abs/" <> str
 
-renderTitle = em . toHtml
+renderTitle str = [Em $ [Text str]]
 
-renderCoauthor :: [String] -> Html
-renderCoauthor xs = "with " <> coAuthorList
-       where coAuthorList = flatten $ (\x -> separatedEntry (toHtml x) ", ") <$> xs 
+renderCoauthor :: [String] -> CoreInline
+renderCoauthor xs = (Text "with ") : coAuthorList
+       where coAuthorList = flatten $ (\x -> separatedEntry [(Text x)] [Text ", "]) <$> xs
 
-renderPublication :: Publication -> Html
-renderPublication pub = divClass "publication"
-  $ flatten [sTitle, sCoauthor, sJournal, sArxiv, sDate, sNote]
-  where sCoauthor = separatedEntryMaybe (renderCoauthor <$> coauthors pub) br
-        sTitle = separatedEntry (renderTitle $ title pub) br
-        sJournal = separatedEntryMaybe (renderJournal <$> journal pub) ", "
-        sArxiv = separatedEntryMaybe (renderArxiv <$> arxiv pub) ", "
-        sDate = separatedEntry (toHtml $ date pub) ", "
-        sNote = separatedEntryMaybe (toHtml <$> note pub) ", "
 
-renderPublications :: [Publication] -> Html
-renderPublications list = mconcat $ map renderPublication list
+renderPublication :: Publication -> CoreInline
+renderPublication pub = flatten [sTitle, sCoauthor, sJournal, sArxiv, sDate, sNote]
+     where  sCoauthor = separatedEntryMaybe (renderCoauthor <$> coauthors pub) [Newline]
+            sTitle = separatedEntry (renderTitle $ title pub) [Newline]
+            sJournal = separatedEntryMaybe (renderJournal <$> journal pub) [Text ", "]
+            sArxiv = separatedEntryMaybe (renderArxiv <$> arxiv pub) [Text ", "]
+            sDate = separatedEntry [Text $ date pub] [Text ", "]
+            sNote = separatedEntryMaybe (return <$> Text <$> note pub) [Text ", "]
+
+renderPublications :: [Publication] -> CoreHtml
+renderPublications list = mconcat $ Div css <$> (Direct <$> map renderPublication list)
+    where css = set cssClass $ Just "publication"
 
 parseBibliography :: String -> [Publication]
 parseBibliography x = case (eitherDecode $ pack x) of
             Right a -> a
             Left str -> error $ "JSON: " <> str
 
-generateBibliography :: String -> Html
+generateBibliography :: String -> CoreHtml
 generateBibliography path = renderPublications $ parseBibliography path
