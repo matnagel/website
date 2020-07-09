@@ -43,6 +43,9 @@ import HtmlInterface (HasMenu(..))
 import qualified BibliographyGenerator as BG
 import Prelude hiding (div, head, id)
 
+import Data.Foldable
+import Data.Typeable
+
 import MarkLight.Arguments
 import Types
 import MarkLight.Types
@@ -51,20 +54,6 @@ import MarkLight.Types
 wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!'
     <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> char '-'
 
-charToken a = tokenize $ char a
-
-stringToken str = tokenize $ string str
-
-braceCommand str p = between
-      (try $ charToken '{' *> stringToken str)
-      (char '}')
-      p
-
-ensureStartOfLine :: Monad m => ParsecT s u m ()
-ensureStartOfLine = do
-  pos <- getPosition
-  guard (sourceColumn pos == 1)
-
 blank = char ' '
 nonNewlineSpace = blank <|> tab
 spacesWithAtMostOneNewline = do
@@ -72,10 +61,22 @@ spacesWithAtMostOneNewline = do
     optional (newline >> (many nonNewlineSpace))
 
 tokenize :: Parser a -> Parser a
-tokenize p = p <* optional spacesWithAtMostOneNewline
+tokenize p = p <* spacesWithAtMostOneNewline
 
-tokenizeBlock :: Parser a -> Parser a
-tokenizeBlock p = p <* spaces
+charToken a = tokenize $ char a
+
+stringToken str = tokenize $ try $ string str
+
+braceCommand str p = between
+      (try $ charToken '{' *> stringToken str)
+      (char '}')
+      p
+
+parseCommand :: Typeable a => String -> Argument a -> Parser a
+parseCommand str arg = braceCommand str $ parseArg arg
+
+parseCommands :: Typeable a => [(String, Argument a)] -> Parser a
+parseCommands xs = asum $ (\(str,arg) -> parseCommand str arg) <$> xs
 
 parseSpace :: Parser LightAtom
 parseSpace = tokenize ( (lookAhead space) >> return Space)
@@ -86,14 +87,8 @@ parseWord = Word <$> (many1 wordLetter)
 parseLinebreak :: Parser LightAtom
 parseLinebreak = tokenize $ try (stringToken "<br>" >> (return Newline))
 
-optionalSepBy :: Parser a -> Parser a -> Parser [a]
-optionalSepBy sep p = do
-    as <- many1 (helper sep p <|> return <$> p)
-    return $ concat as
-    where helper sep p = try $ do
-            ss <- sep
-            ps <- p
-            return (ss:ps:[])
+tokenizeBlock :: Parser a -> Parser a
+tokenizeBlock p = p <* spaces
 
 pageInformationArg :: Argument PageInformation
 pageInformationArg = MkPageInformation
@@ -103,8 +98,7 @@ pageInformationArg = MkPageInformation
     <*>| FromFlag "registerMenu" (MkRegisterMenuEntryFlag)
 
 parsePageInformation :: Parser PageInformation
-parsePageInformation = tokenizeBlock $ braceCommand "page"
-    $ parseArg pageInformationArg
+parsePageInformation = parseCommand "page" pageInformationArg
 
 linkArg :: Argument LightAtom
 linkArg = Link
@@ -112,7 +106,7 @@ linkArg = Link
     <*>| FromKey "text" (stdParser :: Parser Text)
 
 parseLink :: Parser LightAtom
-parseLink = braceCommand "link" $ parseArg linkArg
+parseLink = parseCommand "link" linkArg
 
 bookArg :: Argument LightAtom
 bookArg = Book
@@ -121,40 +115,21 @@ bookArg = Book
     <*>| FromKeyDefault "link" (return <$> stdParser) Nothing
 
 parseBook :: Parser LightAtom
-parseBook = braceCommand "book" $ parseArg bookArg
-
-pictureArg :: Argument LightBlock
-pictureArg = Picture
-    <$>| FromKey "path" (MkURLPath <$> parseQuotedString)
-    <*>| FromKey "title" (MkTitle <$> parseQuotedString)
-    <*>| FromKey "size" stdParser
-    <*>| FromKey "style" (stdParser)
-
-parsePicture :: Parser LightBlock
-parsePicture = ensureStartOfLine *> (tokenizeBlock $
-    braceCommand "picture" $ parseArg pictureArg)
+parseBook = parseCommand "book" bookArg
 
 braced p = between (charToken '{') (charToken '}') p
 
 parseHFlex :: Parser LightBlock
-parseHFlex = ensureStartOfLine *> (tokenizeBlock $
+parseHFlex = tokenizeBlock $
     braceCommand "hflex" $ do
         hbs <- between (charToken '[') (charToken ']')
             $ sepBy1 (braced $ mconcat <$> many1 parseBlock)
             $ charToken ','
         return $ HFlex $ hbs
-    )
-
-publicationListArg :: Argument LightBlock
-publicationListArg = PublicationList <$>| FromKey "src" stdParser
-
-parsePublicationList :: Parser LightBlock
-parsePublicationList = ensureStartOfLine *> (tokenizeBlock $ braceCommand "publications"
-    $ parseArg publicationListArg)
 
 parseHeader :: Parser LightBlock
-parseHeader = tokenizeBlock $ ensureStartOfLine *> do
-  charToken '='
+parseHeader = tokenizeBlock $ do
+  tokenize $ many1 (char '=')
   hdr <- many1 (wordLetter <|> blank)
   return $ Header $ MkText hdr
 
@@ -168,43 +143,63 @@ removeRedundantSpaces (x:xs) = x:removeRedundantSpaces xs
 parseAtom :: Parser LightAtom
 parseAtom = (parseLinebreak <|> parseWord <|> parseLink <|> parseBook)
 
+optionalSepBy :: Parser a -> Parser a -> Parser [a]
+optionalSepBy sep p = do
+    as <- many1 (helper sep p <|> return <$> p)
+    return $ concat as
+    where helper sep p = try $ do
+            ss <- sep
+            ps <- p
+            return (ss:ps:[])
+
 parseInline :: Parser [LightAtom]
 parseInline = removeRedundantSpaces <$> optionalSepBy parseSpace parseAtom
 
 parseParagraph :: Parser LightBlock
-parseParagraph = tokenizeBlock $ Para <$> parseInline
+parseParagraph = Para <$> parseInline
 
 parseDirect :: Parser LightBlock
-parseDirect = tokenizeBlock $ Direct <$> parseInline
+parseDirect = Direct <$> parseInline
 
 parseEnumItem :: Parser [LightAtom]
-parseEnumItem = tokenize $ ensureStartOfLine *> do
+parseEnumItem = tokenize $ do
     charToken '-'
     block <- parseInline
     return block
 
 parseEnumeration :: Parser LightBlock
-parseEnumeration = tokenizeBlock $ ensureStartOfLine *> do
+parseEnumeration = do
     blocks <- many1 parseEnumItem
     return $ Enumeration blocks
 
 parseComment :: Parser LightBlock
-parseComment = tokenizeBlock $ ensureStartOfLine *> do
+parseComment = do
     charToken '#'
     manyTill anyChar (newline) >> return Comment
 
 parsePreformated :: Parser LightBlock
-parsePreformated = ensureStartOfLine *> (tokenizeBlock
-    $ braceCommand "pre" $ Preformated <$> manyTill anyChar (lookAhead $ char '}'))
+parsePreformated = braceCommand "pre" $ Preformated <$> manyTill anyChar (lookAhead $ char '}')
+
+publicationListArg :: Argument LightBlock
+publicationListArg = PublicationList <$>| FromKey "src" stdParser
+
+pictureArg :: Argument LightBlock
+pictureArg = Picture
+    <$>| FromKey "path" (MkURLPath <$> parseQuotedString)
+    <*>| FromKey "title" (MkTitle <$> parseQuotedString)
+    <*>| FromKey "size" stdParser
+    <*>| FromKey "style" (stdParser)
 
 parseBlock :: Parser LightBlock
-parseBlock = parseEnumeration
-    <|> parseHeader <|> parseParagraph
-    <|> parseComment <|> parsePicture <|> parsePublicationList <|> parsePreformated <|> parseHFlex
+parseBlock = tokenizeBlock $ parseEnumeration
+    <|> parseHeader <|> parseParagraph <|> parseComment <|> parsePreformated
+    <|> parseHFlex
+    <|> parseCommands [("publications", publicationListArg),
+        ("picture", pictureArg)]
 
 parsePage :: Parser Page
 parsePage = do
-  pageInformation <- parsePageInformation
+  pageInformation <- tokenizeBlock $ parsePageInformation
   elms <- many parseBlock
   eof
   return $ MkPage pageInformation $ mconcat elms

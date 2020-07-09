@@ -1,6 +1,6 @@
 {page title="Misc" path="misc.html", addMenu, registerMenu}
 
-= Seminars
+=== Seminars
 
 {link path="https://math.ethz.ch/news-and-events/events/research-seminars.html" 
 	text="Seminars at ETH"}
