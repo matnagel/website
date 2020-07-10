@@ -15,7 +15,6 @@ import qualified Control.Monad.State.Lazy as SM
 
 import Effects.Environment
 
-import qualified HtmlInterface as HI
 import HtmlInterface(HasMenu(..))
 import MarkLightParser
 
@@ -36,7 +35,7 @@ instance ReadLocal ConstructEnvironment where
     readResource (MkLocalPath pth) =  MkEnvI $ SM.lift $ readFile pth
 
 instance WriteLocal ConstructEnvironment where
-    writeResource (MkLocalPath pth) cont = return () -- MkEnvI $ SM.lift $ writeFile pth cont
+    writeResource _ _ = return ()
 
 instance MonadFail ConstructEnvironment where
     fail str = MkEnvI $ fail str

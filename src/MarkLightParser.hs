@@ -16,24 +16,7 @@ module MarkLightParser
 where
 
 import Control.Monad
-import qualified Data.Map as M
-import qualified Text.Parsec as P
-import Text.Parsec
-  ( (<?>),
-    (<|>),
-    char,
-    eof,
-    letter,
-    many,
-    many1,
-    manyTill,
-    parse,
-    sourceColumn,
-    space,
-    spaces,
-    string,
-    try
-  )
+import Text.Parsec (sourceColumn)
 import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Prim
@@ -56,24 +39,31 @@ notAtLineBegin = do
     guard (col > 1)
 
 -- Tokenized character sets for paragraphs
+wordLetter :: Parser Char
 wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!'
     <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> (notAtLineBegin >> char '-')
 
 
-
+blank :: Parser Char
 blank = char ' '
+
+nonNewlineSpace :: Parser Char
 nonNewlineSpace = blank <|> tab
-spacesWithAtMostOneNewline = do
-    many nonNewlineSpace
-    optional (newline >> (many nonNewlineSpace))
+
+spacesWithAtMostOneNewline :: Parser ()
+spacesWithAtMostOneNewline = many nonNewlineSpace
+    >> optional (newline >> (many nonNewlineSpace))
 
 tokenize :: Parser a -> Parser a
 tokenize p = p <* spacesWithAtMostOneNewline
 
+charToken :: Char -> Parser Char
 charToken a = tokenize $ char a
 
+stringToken :: String -> Parser String
 stringToken str = tokenize $ try $ string str
 
+braceCommand :: String -> Parser a -> Parser a
 braceCommand str p = between
       (try $ charToken '{' *> stringToken str)
       (char '}')
@@ -124,6 +114,7 @@ bookArg = Book
 parseBook :: Parser LightAtom
 parseBook = parseCommand "book" bookArg
 
+braced :: Parser a -> Parser a
 braced p = between (charToken '{') (charToken '}') p
 
 
@@ -139,10 +130,8 @@ parseHFlex :: Parser LightBlock
 parseHFlex = parseCommand "hflex" hflexArg
 
 parseHeader :: Parser LightBlock
-parseHeader = tokenizeBlock $ do
-  tokenize $ many1 (char '=')
-  hdr <- many1 (wordLetter <|> blank)
-  return $ Header $ MkText hdr
+parseHeader = tokenizeBlock $
+  tokenize $ many1 (char '=') >> (Header . MkText) <$> many1 (wordLetter <|> blank)
 
 removeRedundantSpaces :: [LightAtom] -> [LightAtom]
 removeRedundantSpaces [] = []
@@ -158,9 +147,9 @@ optionalSepBy :: Parser a -> Parser a -> Parser [a]
 optionalSepBy sep p = do
     as <- many1 (helper sep p <|> return <$> p)
     return $ concat as
-    where helper sep p = try $ do
-            ss <- sep
-            ps <- p
+    where helper s par = try $ do
+            ss <- s
+            ps <- par
             return (ss:ps:[])
 
 parseInline :: Parser [LightAtom]
@@ -169,14 +158,11 @@ parseInline = removeRedundantSpaces <$> optionalSepBy parseSpace parseAtom
 parseParagraph :: Parser LightBlock
 parseParagraph = Para <$> parseInline
 
-parseDirect :: Parser LightBlock
-parseDirect = Direct <$> parseInline
+-- parseDirect :: Parser LightBlock
+-- parseDirect = Direct <$> parseInline
 
 parseEnumItem :: Parser [LightAtom]
-parseEnumItem = tokenize $ do
-    charToken '-'
-    block <- parseInline
-    return block
+parseEnumItem = tokenize $ charToken '-' >> parseInline
 
 parseEnumeration :: Parser LightBlock
 parseEnumeration = do
@@ -184,9 +170,7 @@ parseEnumeration = do
     return $ Enumeration blocks
 
 parseComment :: Parser LightBlock
-parseComment = do
-    charToken '#'
-    manyTill anyChar (newline) >> return Comment
+parseComment = charToken '#' >> manyTill anyChar (newline) >> return Comment
 
 parsePreformated :: Parser LightBlock
 parsePreformated = braceCommand "pre" $ Preformated <$> manyTill anyChar (lookAhead $ char '}')
@@ -222,7 +206,7 @@ parseMarkLight (MkLocalPath path) cont = case parse parsePage path cont of
 
 interpretMarkLight :: (HasMenu m, ReadLocal m) => Page -> m HI.Html
 interpretMarkLight (MkPage pageinfo lightblock) = do
-    blocks <- HI.compileHtml <$> translateLightBlock lightblock
+    blocks <-  translateLightBlock lightblock
     checkAndRegisterMenuEntry pageinfo
     generatePageHeader pageinfo blocks
 
@@ -232,20 +216,16 @@ checkAndRegisterMenuEntry pageinfo = case getFlagAddEntry pageinfo of
         (MkRegisterMenuEntryFlag True) -> registerMenu $
             HI.MkMenuEntry (getPagePath pageinfo) (getPageTitle pageinfo)
 
-generatePageHeader :: HasMenu m => PageInformation -> HI.Html -> m HI.Html
+generatePageHeader :: HasMenu m => PageInformation -> HI.CoreHtml -> m HI.Html
 generatePageHeader pageinfo bdy = do
     menu <- renderMenu pageinfo
-    return $ HI.page (renderPageTitle pageinfo) $ menu
-        <> HI.pageTitle (renderPageTitle pageinfo) <> bdy
+    return $ HI.page (getPageTitle pageinfo) $ ((HI.Lift menu)
+        <> (HI.Lift $ HI.pageTitle (getPageTitle pageinfo)) <> bdy)
 
 renderMenu :: HasMenu m => PageInformation -> m HI.Html
-renderMenu pi = case getFlagIncludesMenu pi of
+renderMenu pinfo = case getFlagIncludesMenu pinfo of
     (MkIncMenuFlag False) -> return $ mempty
     (MkIncMenuFlag True) -> getMenu
-
-renderPageTitle :: PageInformation -> HI.Html
-renderPageTitle pi = case getPageTitle pi of
-    MkTitle title -> HI.toHtml title
 
 translateLightBlock :: ReadLocal m => LightBlock -> m HI.CoreHtml
 translateLightBlock (Header las) = return $ HI.Header $ las

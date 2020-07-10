@@ -8,11 +8,9 @@ module BibliographyGenerator (
 ) where
 
 import Data.Aeson
-import Data.ByteString.Lazy.Char8 (pack, unpack)
-import Control.Applicative ( (<*>), (<$>) )
-import Data.Monoid ( mconcat, (<>), mempty )
-import Control.Monad ( mzero, msum )
-import Data.Traversable
+import Data.ByteString.Lazy.Char8 (pack)
+--import Data.Monoid ( mconcat, (<>), mempty )
+import Control.Monad ( mzero )
 import HtmlInterface
 import Utility.Separators
 
@@ -60,6 +58,7 @@ renderArxiv :: Arxiv -> CoreInline
 renderArxiv (Arxiv str) = [Link (MkURLPath url) (MkText str)]
                 where url = "https://arxiv.org/abs/" <> str
 
+renderTitle :: String -> [CoreInlineElement]
 renderTitle str = [Em $ [Text str]]
 
 renderCoauthor :: [String] -> CoreInline
