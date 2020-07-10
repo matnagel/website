@@ -41,7 +41,7 @@ import Text.Parsec.String
 import qualified HtmlInterface as HI
 import HtmlInterface (HasMenu(..))
 import qualified BibliographyGenerator as BG
-import Prelude hiding (div, head, id)
+import Prelude hiding (div, head)
 
 import Data.Foldable
 import Data.Typeable
@@ -50,9 +50,16 @@ import MarkLight.Arguments
 import Types
 import MarkLight.Types
 
+notAtLineBegin :: Parser ()
+notAtLineBegin = do
+    col <- sourceColumn <$> getPosition
+    guard (col > 1)
+
 -- Tokenized character sets for paragraphs
 wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!'
-    <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> char '-'
+    <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> (notAtLineBegin >> char '-')
+
+
 
 blank = char ' '
 nonNewlineSpace = blank <|> tab
@@ -119,13 +126,17 @@ parseBook = parseCommand "book" bookArg
 
 braced p = between (charToken '{') (charToken '}') p
 
+
+hflexArg :: Argument LightBlock
+hflexArg = HFlex <$>| (FromKey "content" $ parser)
+    where parser = do
+            hbs <- between (charToken '[') (charToken ']')
+                $ sepBy1 (braced $ mconcat <$> many1 parseBlock)
+                $ charToken ','
+            return hbs
+
 parseHFlex :: Parser LightBlock
-parseHFlex = tokenizeBlock $
-    braceCommand "hflex" $ do
-        hbs <- between (charToken '[') (charToken ']')
-            $ sepBy1 (braced $ mconcat <$> many1 parseBlock)
-            $ charToken ','
-        return $ HFlex $ hbs
+parseHFlex = parseCommand "hflex" hflexArg
 
 parseHeader :: Parser LightBlock
 parseHeader = tokenizeBlock $ do
@@ -243,16 +254,18 @@ translateLightBlock (Para las) = return $ HI.Paragraph $ las >>= translateLightA
 translateLightBlock (Direct las) = return $ HI.Direct $ las >>= translateLightAtom
 translateLightBlock (Enumeration las) = return $ HI.Enumeration
     $ (\inline -> inline >>= translateLightAtom) <$> las
-translateLightBlock (Picture (MkURLPath path) (MkTitle title) size NoStyle) = return $ HI.Lift $ HI.image path title size
-translateLightBlock (Picture (MkURLPath path) (MkTitle title) size StyleCentered) = return $ HI.Lift $
-    HI.flex HI.! HI.style "justify-content:center; margin:2ex"
-  $ HI.image path title size
+translateLightBlock (Picture path title size NoStyle) = return $ HI.Picture id path title size
+translateLightBlock (Picture path title size StyleCentered) = return
+    $ HI.HFlex (HI.setCSS "justify-content" "center" . HI.setCSS "margin" "2ex")
+    $ [HI.Picture id path title size]
+translateLightBlock (Picture path title size StyleRight) = return
+    $ HI.Picture (HI.setCSS "float" "right") path title size
 translateLightBlock Comment = return $ mempty
 translateLightBlock (PublicationList path) = do
     bib <- readResource path
     return $ BG.generateBibliography bib
 translateLightBlock (Preformated str) = return $ HI.Pre str
-translateLightBlock (HFlex lbs) = HI.HFlex <$> traverse translateLightBlock lbs
+translateLightBlock (HFlex lbs) = HI.HFlex id <$> traverse translateLightBlock lbs
 
 translateLightAtom :: LightAtom -> [HI.CoreInlineElement]
 translateLightAtom (Word str) = return $ HI.Text str

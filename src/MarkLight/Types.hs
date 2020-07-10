@@ -18,7 +18,7 @@ import Types
 newtype FlagIncludesMenu = MkIncMenuFlag Bool deriving (Eq, Show)
 newtype FlagRegisterMenuEntry = MkRegisterMenuEntryFlag Bool deriving (Eq, Show)
 
-data Style = NoStyle | StyleCentered deriving (Eq, Show)
+data Style = NoStyle | StyleCentered | StyleRight deriving (Eq, Show)
 
 data LightAtom
   = Word String

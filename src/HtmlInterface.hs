@@ -38,7 +38,8 @@ CoreInlineElement (..),
 CoreHtml (..),
 CoreInline (..),
 compileHtml,
-cssClass
+cssClass,
+setCSS
 ) where
 
 import Prelude hiding (head, div)
@@ -71,13 +72,13 @@ compileInlineElement (Link (MkURLPath url) (MkText text)) = H.a
     ! A.href (fromString url) $ (fromString text)
 compileInlineElement (Em ins) =  H.em $ mconcat $ compileInlineElement <$> ins
 
-data CSS = MkCSS { _cssClass :: Maybe String }
+data CSSacc = MkCSS { _cssClass :: Maybe String }
 
-makeLenses ''CSS
+makeLenses ''CSSacc
 
 emptyCSS = MkCSS Nothing
 
-type CSSTransformation = CSS -> CSS
+type CSS = CSSacc -> CSSacc
 
 data CoreHtml = Monoid [CoreHtml]
     | Paragraph CoreInline
@@ -85,16 +86,15 @@ data CoreHtml = Monoid [CoreHtml]
     | Header Text
     | Pre String
     | Enumeration [CoreInline]
-    | Div CSSTransformation CoreHtml
-    | Picture URLPath Text PictureSize
-    | HFlex [CoreHtml]
-    | Lift Html
+    | Div CSS CoreHtml
+    | Picture CSS URLPath Title PictureSize
+    | HFlex CSS [CoreHtml]
 
 compileInline :: CoreInline -> Html
 compileInline cin = mconcat $ compileInlineElement <$> cin
 
-compileCSS :: CSSTransformation -> H.Attribute
-compileCSS f = mconcat $ catMaybes [A.class_ . fromString <$> (view cssClass css)]
+compileCSS :: CSS -> H.Attribute
+compileCSS f = mconcat $ catMaybes [A.style . fromString <$> (view cssClass css)]
     where css = f emptyCSS
 
 compileHtml :: CoreHtml -> Html
@@ -104,10 +104,9 @@ compileHtml (Paragraph para) = H.p $ mconcat $ compileInlineElement <$> para
 compileHtml (Header (MkText text)) = H.p $ headline $ toHtml text
 compileHtml (Pre text) = H.pre $ toHtml text
 compileHtml (Div trans hl) = (H.div H.! compileCSS trans) $ compileHtml hl
-compileHtml (Picture (MkURLPath path) (MkText text) size) = image path text size
-compileHtml (HFlex hls) = flex $ mconcat $ compileHtml <$> encapsulateMonoid <$> hls
-compileHtml (Lift hl) = hl
-compileHtml (Enumeration inline) = H.li $ mconcat $ H.ul . compileInline <$> inline
+compileHtml (Picture trans (MkURLPath path) (MkTitle text) size) = image trans path text size
+compileHtml (HFlex css hls) = flex H.! compileCSS css $ mconcat $ compileHtml <$> encapsulateMonoid <$> hls
+compileHtml (Enumeration inline) = H.ul $ mconcat $ (H.li . compileInline) <$> inline
 
 encapsulateMonoid :: CoreHtml -> CoreHtml
 encapsulateMonoid (Monoid ls) = Div id (Monoid ls)
@@ -131,11 +130,15 @@ data MenuEntry = MkMenuEntry TargetPath Title
 renderMenuEntry (MkMenuEntry (MkTargetPath url) (MkTitle name)) = link url name
 
 class ToCSS a where
-    toCSS :: a -> H.Attribute
+    toCSS :: a -> CSS
+
+setCSS :: String -> String -> CSS
+setCSS key str (MkCSS Nothing) = MkCSS $ Just (key ++ ":" ++ str)
+setCSS key str (MkCSS (Just beg)) = MkCSS $ Just (beg ++ ";" ++ key ++ ":" ++ str)
 
 instance ToCSS PictureSize where
-    toCSS (MkSizeHeight h) = A.style $ fromString $ "height:" ++ (show h) ++ "ex"
-    toCSS (MkSizeWidth h) = A.style $ fromString $ "width:" ++ (show h) ++ "ex"
+    toCSS (MkSizeHeight h) = setCSS "height" $ (show h) ++ "ex"
+    toCSS (MkSizeWidth h) = setCSS "width" $ (show h) ++ "ex"
 
 style = A.style
 pre = H.pre
@@ -170,15 +173,15 @@ addheader mtitle = H.head $ do
 
 flex = divClass "flex"
 
-image :: String -> String -> PictureSize -> Html
-image url desc size = H.img ! A.src (fromString url) ! A.alt (fromString desc) ! toCSS size
+image :: CSS -> String -> String -> PictureSize -> Html
+image trans url desc size = H.img ! A.src (fromString url) ! A.alt (fromString desc) ! compileCSS (trans . toCSS size)
 
 link :: String -> String -> Html
 link url name = H.a ! A.href (fromString url) $ (fromString name)
 
 rightPicture left url desc pid = flex $ do
         left
-        (image url desc pid) ! style "margin-left: 1ex"
+        (image id url desc pid) ! style "margin-left: 1ex"
 
 homework url name due = do
   link url name

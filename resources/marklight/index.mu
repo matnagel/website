@@ -1,6 +1,6 @@
 {page title="Matthias Nagel" path="index.html", addMenu}
 
-{hflex [{
+{hflex content=[{
 {pre 
 matthias.nagel (at) math.ethz.ch
 

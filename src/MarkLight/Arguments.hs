@@ -170,6 +170,7 @@ instance Parseable URLPath where
 instance Parseable Style where
     stdParser = (string "centered" >> (return $ StyleCentered))
         <|> (string "nostyle" >> return NoStyle)
+        <|> (string "right" >> return StyleRight)
 
 instance Parseable PictureSize where
     stdParser = (string "height:" >> MkSizeHeight <$> floating)
