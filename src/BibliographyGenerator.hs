@@ -9,7 +9,6 @@ module BibliographyGenerator (
 
 import Data.Aeson
 import Data.ByteString.Lazy.Char8 (pack)
---import Data.Monoid ( mconcat, (<>), mempty )
 import Control.Monad ( mzero )
 import HtmlInterface
 import Utility.Separators

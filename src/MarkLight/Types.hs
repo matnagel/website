@@ -38,6 +38,7 @@ data LightBlock
   | Preformated String
   | Picture URLPath Title PictureSize Style
   | PublicationList LocalPath
+  | RightPicture LightBlock URLPath Title PictureSize
   | Comment
   deriving (Eq, Show)
 

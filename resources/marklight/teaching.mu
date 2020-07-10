@@ -16,18 +16,18 @@ H312, Fridays 11:15
 
 = McMaster / Math 1ZC3
 
+{rightPicture content={
 Introduction to linear algebra for engineers. We cover linear independence, dimension, determinants, eigenvalues, diagonalisation, and complex numbers.
-
-{picture path="https://people.math.ethz.ch/~managel/website/images/matrix.jpg" title="A magic matrix" size=height:15.0 style=nostyle}
+} path="https://people.math.ethz.ch/~managel/website/images/matrix.jpg" title="A magic matrix" size=height:15.0}
 
 = McMaster / Light bulbs in dimension 3 and 4
 
+{rightPicture content={
 After recalling why light bulbs are standard in dimension 3, we go through Gabai's proof 
 ({link path="https://arxiv.org/abs/1705.09989" text="ArXiv:1705.09989"}) of the corresponding statement in dimension 4. Along the way, we pick up the necessary background on embedded Morse theory and diffeomorphism groups.
 
 H312, Fridays 13:00
-
-{picture path="https://people.math.ethz.ch/~managel/website/images/bulb.jpg" title="A light bulb" size=height:15.0 style=nostyle}
+} path="https://people.math.ethz.ch/~managel/website/images/bulb.jpg" title="A light bulb" size=height:15.0}
 
 = McMaster / Math 731
 
@@ -37,11 +37,11 @@ Introduction to algebraic topology with focus on the fundamental group and homol
 
 = UQAM / SW stable homotopy theory
 
+{rightPicture content={
 We study the approach to Seiberg-Witten theory of Bauer-Furuta using stable homotopy theory.
 
 {link path="http://www.patrickorson.com/SWstable/" text="Seminar page" }
-
-{picture path="https://people.math.ethz.ch/~managel/website/images/vectorfield.jpg" title="Flow of a vectorfield" size=height:15.0 style=nostyle}
+} path="https://people.math.ethz.ch/~managel/website/images/vectorfield.jpg" title="Flow of a vectorfield" size=height:15.0}
 
 = McGill / Math 123
 

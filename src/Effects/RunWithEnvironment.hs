@@ -28,7 +28,7 @@ execWithEnvironment :: Environment -> RunWithEnvironment a -> IO a
 execWithEnvironment env (MkEnvI x) = x env
 
 instance HI.HasMenu RunWithEnvironment where
-    getMenu = MkEnvI $ \env -> return $ (HI.menuBlockFromList . getMenuEntries) env
+    getMenu = MkEnvI $ \env -> return $ (HI.menuBlockFromList . reverse . getMenuEntries) env
     registerMenu _ = return ()
 
 instance ReadLocal RunWithEnvironment where

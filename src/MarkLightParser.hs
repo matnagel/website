@@ -185,12 +185,20 @@ pictureArg = Picture
     <*>| FromKey "size" stdParser
     <*>| FromKey "style" (stdParser)
 
+rightPictureArg :: Argument LightBlock
+rightPictureArg = RightPicture
+    <$>| (FromKey "content" $ mconcat <$> (braced $ many parseBlock))
+    <*>| FromKey "path" (MkURLPath <$> parseQuotedString)
+    <*>| FromKey "title" (MkTitle <$> parseQuotedString)
+    <*>| FromKey "size" stdParser
+
+
 parseBlock :: Parser LightBlock
 parseBlock = tokenizeBlock $ parseEnumeration
     <|> parseHeader <|> parseParagraph <|> parseComment <|> parsePreformated
     <|> parseHFlex
     <|> parseCommands [("publications", publicationListArg),
-        ("picture", pictureArg)]
+        ("picture", pictureArg), ("rightPicture", rightPictureArg)]
 
 parsePage :: Parser Page
 parsePage = do
@@ -246,6 +254,8 @@ translateLightBlock (PublicationList path) = do
     return $ BG.generateBibliography bib
 translateLightBlock (Preformated str) = return $ HI.Pre str
 translateLightBlock (HFlex lbs) = HI.HFlex id <$> traverse translateLightBlock lbs
+translateLightBlock (RightPicture content path title size) = translateLightBlock 
+    $ HFlex [content, Picture path title size NoStyle]
 
 translateLightAtom :: LightAtom -> [HI.CoreInlineElement]
 translateLightAtom (Word str) = return $ HI.Text str
