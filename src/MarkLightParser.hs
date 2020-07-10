@@ -41,7 +41,7 @@ notAtLineBegin = do
 -- Tokenized character sets for paragraphs
 wordLetter :: Parser Char
 wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!'
-    <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> (notAtLineBegin >> char '-')
+    <|> char '/' <|> char '\''  <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> (notAtLineBegin >> char '-')
 
 
 blank :: Parser Char
