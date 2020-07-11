@@ -50,9 +50,14 @@ compileInlineElement (Link (MkURLPath url) (MkText text)) = H.a
     ! A.href (fromString url) $ (fromString text)
 compileInlineElement (Em ins) =  H.em $ mconcat $ compileInlineElement <$> ins
 
-data CSSKey = CSSClassKey String | CSSStyleKey String deriving (Eq, Ord)
-type CSSContainer = M.Map CSSKey String
+type StyleContainer = M.Map String String
+newtype CSSContainer = MkCSSContainer (Maybe String, StyleContainer)
 type CSS = CSSContainer -> CSSContainer
+
+instance Semigroup CSSContainer where
+    (<>) (MkCSSContainer (a,b)) (MkCSSContainer (c,d)) = case a of
+        Nothing -> MkCSSContainer (c, b <> d)
+        x@(Just _) -> MkCSSContainer (x, b <> d)
 
 data CoreHtml = Monoid [CoreHtml]
     | Paragraph CoreInline
@@ -68,10 +73,19 @@ data CoreHtml = Monoid [CoreHtml]
 compileInline :: CoreInline -> Html
 compileInline cin = mconcat $ compileInlineElement <$> cin
 
+buildStyle :: CSS -> H.Attribute
+buildStyle f = A.style . fromString $ M.foldrWithKey (\k v str -> buildAttr k v <> str) mempty $ style
+    where MkCSSContainer (_, style) = f $ MkCSSContainer (Nothing, mempty)
+          buildAttr key v = key ++  ":" ++ v ++ ";"
+
+buildClass :: CSS -> H.Attribute
+buildClass f = case cls of
+    Nothing -> mempty
+    Just str -> A.class_ . fromString $ str
+    where MkCSSContainer (cls, _) = f $ MkCSSContainer (Nothing, mempty)
+
 compileCSS :: CSS -> H.Attribute
-compileCSS f = M.foldrWithKey (\k v attr -> buildAttr k v <> attr) mempty $ f mempty
-    where buildAttr (CSSStyleKey key) v = A.style . fromString $ key ++  ":" ++ v
-          buildAttr (CSSClassKey key) _ = A.class_ . fromString $ key
+compileCSS f = buildClass f <> buildStyle f
 
 compileHtml :: CoreHtml -> Html
 compileHtml (Monoid hls) = mconcat $ compileHtml <$> hls
@@ -111,10 +125,10 @@ class ToCSS a where
     toCSS :: a -> CSS
 
 setStyle :: String -> String -> CSS
-setStyle key str = M.insert (CSSStyleKey key) str
+setStyle key str (MkCSSContainer (c, cont)) = MkCSSContainer (c, M.insert key str cont)
 
 setClass :: String -> CSS
-setClass key = M.insert (CSSClassKey key) []
+setClass key (MkCSSContainer (c, cont)) = MkCSSContainer (Just key, cont)
 
 
 instance ToCSS PictureSize where
