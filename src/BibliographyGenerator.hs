@@ -76,7 +76,7 @@ renderPublication pub = flatten [sTitle, sCoauthor, sJournal, sArxiv, sDate, sNo
 
 renderPublications :: [Publication] -> CoreHtml
 renderPublications list = mconcat $ Div css <$> (Direct <$> map renderPublication list)
-    where css = set cssClass $ Just "publication"
+    where css = setClass "publication"
 
 parseBibliography :: String -> [Publication]
 parseBibliography x = case (eitherDecode $ pack x) of

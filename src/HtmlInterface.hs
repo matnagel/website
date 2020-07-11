@@ -16,8 +16,8 @@ CoreInlineElement (..),
 CoreHtml (..),
 CoreInline,
 compileHtml,
-cssClass,
-setCSS
+setStyle,
+setClass
 ) where
 
 import Prelude hiding (head, div)
@@ -29,6 +29,7 @@ import Types
 
 import Data.String
 import Data.Maybe
+import qualified Data.Map as M
 
 import Optics.TH
 import Optics
@@ -49,14 +50,9 @@ compileInlineElement (Link (MkURLPath url) (MkText text)) = H.a
     ! A.href (fromString url) $ (fromString text)
 compileInlineElement (Em ins) =  H.em $ mconcat $ compileInlineElement <$> ins
 
-data CSSacc = MkCSS { _cssClass :: Maybe String }
-
-makeLenses ''CSSacc
-
-emptyCSS :: CSSacc
-emptyCSS = MkCSS Nothing
-
-type CSS = CSSacc -> CSSacc
+data CSSKey = CSSClassKey String | CSSStyleKey String deriving (Eq, Ord)
+type CSSContainer = M.Map CSSKey String
+type CSS = CSSContainer -> CSSContainer
 
 data CoreHtml = Monoid [CoreHtml]
     | Paragraph CoreInline
@@ -73,8 +69,9 @@ compileInline :: CoreInline -> Html
 compileInline cin = mconcat $ compileInlineElement <$> cin
 
 compileCSS :: CSS -> H.Attribute
-compileCSS f = mconcat $ catMaybes [A.style . fromString <$> (view cssClass css)]
-    where css = f emptyCSS
+compileCSS f = M.foldrWithKey (\k v attr -> buildAttr k v <> attr) mempty $ f mempty
+    where buildAttr (CSSStyleKey key) v = A.style . fromString $ key ++  ":" ++ v
+          buildAttr (CSSClassKey key) _ = A.class_ . fromString $ key
 
 compileHtml :: CoreHtml -> Html
 compileHtml (Monoid hls) = mconcat $ compileHtml <$> hls
@@ -113,13 +110,16 @@ renderMenuEntry (MkMenuEntry (MkTargetPath url) (MkTitle name)) = link url name
 class ToCSS a where
     toCSS :: a -> CSS
 
-setCSS :: String -> String -> CSS
-setCSS key str (MkCSS Nothing) = MkCSS $ Just (key ++ ":" ++ str)
-setCSS key str (MkCSS (Just beg)) = MkCSS $ Just (beg ++ ";" ++ key ++ ":" ++ str)
+setStyle :: String -> String -> CSS
+setStyle key str = M.insert (CSSStyleKey key) str
+
+setClass :: String -> CSS
+setClass key = M.insert (CSSClassKey key) []
+
 
 instance ToCSS PictureSize where
-    toCSS (MkSizeHeight h) = setCSS "height" $ (show h) ++ "ex"
-    toCSS (MkSizeWidth h) = setCSS "width" $ (show h) ++ "ex"
+    toCSS (MkSizeHeight h) = setStyle "height" $ (show h) ++ "ex"
+    toCSS (MkSizeWidth h) = setStyle "width" $ (show h) ++ "ex"
 
 page :: Title -> CoreHtml -> Html
 page mtitle content = H.docTypeHtml $ do

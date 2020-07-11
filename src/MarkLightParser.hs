@@ -244,10 +244,10 @@ translateLightBlock (Enumeration las) = return $ HI.Enumeration
     $ (\inline -> inline >>= translateLightAtom) <$> las
 translateLightBlock (Picture path title size NoStyle) = return $ HI.Picture id path title size
 translateLightBlock (Picture path title size StyleCentered) = return
-    $ HI.HFlex (HI.setCSS "justify-content" "center" . HI.setCSS "margin" "2ex")
+    $ HI.HFlex (HI.setStyle "justify-content" "center" <> HI.setStyle "margin" "2ex")
     $ [HI.Picture id path title size]
 translateLightBlock (Picture path title size StyleRight) = return
-    $ HI.Picture (HI.setCSS "float" "right") path title size
+    $ HI.Picture (HI.setStyle "float" "right") path title size
 translateLightBlock Comment = return $ mempty
 translateLightBlock (PublicationList path) = do
     bib <- readResource path
