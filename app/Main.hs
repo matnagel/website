@@ -48,6 +48,7 @@ website  = do
     runMarkLight "resources/marklight/teaching.mu"
     runMarkLight "resources/marklight/publications.mu"
     runMarkLight "resources/marklight/index.mu"
+    runMarkLight "resources/marklight/algtop.mu"
    -- lift $ writeFile "output/algtop.html" $ renderHtml $ algTopPage
    -- lift $ writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
     -- writeFile "output/misc.html" $ renderHtml $ miscPage
