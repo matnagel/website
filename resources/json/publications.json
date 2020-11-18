@@ -1,5 +1,12 @@
 [    
     {
+    "Coauthors": ["S. Friedl", "T. Kitayama", "L. Lewark", "M. Powell"],
+    "Title": "Homotopy ribbon concordance, Blanchfield pairings, and twisted Alexander polynomials",
+    "Date": "2020",
+    "Arxiv": "2007.15289"
+    },
+
+    {
     "Coauthors":   ["P. Feller", "A. N. Miller", "P. Orson", "M. Powell", "A. Ray"],
     "Title":    "Embedding spheres in knot traces",
     "Date":     "2020",

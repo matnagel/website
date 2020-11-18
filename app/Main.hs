@@ -1,7 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module Main where
 
@@ -40,19 +37,10 @@ runMarkLight input = do
 
 website :: (ReadLocal m, MonadFail m, HasMenu m, WriteLocal m) => m ()
 website  = do
-   -- lift $ setLocaleEncoding utf8
-   -- time <- lift $ getCurrentTime
-   -- lift $ writeFile "output/index.html" $ renderHtml $ indexPage
-   -- lift $ writeFile "output/teaching.html" $ renderHtml $ teachingPage
-    -- writeFile "output/publications.html" $ renderHtml $ publicationPage bib
     runMarkLight "resources/marklight/teaching.mu"
     runMarkLight "resources/marklight/publications.mu"
     runMarkLight "resources/marklight/index.mu"
     runMarkLight "resources/marklight/algtop.mu"
-   -- lift $ writeFile "output/algtop.html" $ renderHtml $ algTopPage
-   -- lift $ writeFile "output/topologyseminar.html" $ renderHtml $ topSemPage (utctDay time)
-    -- writeFile "output/misc.html" $ renderHtml $ miscPage
-    -- writeFile "output/geotop.html" $ renderHtml $ geoTopPage
     runMarkLight "resources/marklight/misc.mu"
     runMarkLight "resources/marklight/geotop.mu"
 
