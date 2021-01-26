@@ -21,5 +21,3 @@ My field of study is geometric topology. I am interested in geometric objects up
 {picture path="https://people.math.ethz.ch/~managel/website/images/clasp.jpg" title="A clasp" size=width:60.0, style=centered}
 
 I am especially curious about concordance, a special equivalence relation on knots. This relation is intimately tied to questions on the topology of 4-manifolds and their smooth structures.
-
-If you are interested in writing bachelor thesis or a semester project with me, here are some possible {link path="https://people.math.ethz.ch/~managel/website/projects.pdf" text="topics"}.

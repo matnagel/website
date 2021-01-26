@@ -130,8 +130,8 @@ parseHFlex :: Parser LightBlock
 parseHFlex = parseCommand "hflex" hflexArg
 
 parseHeader :: Parser LightBlock
-parseHeader = tokenizeBlock $
-  tokenize $ many1 (char '=') >> (Header . MkText) <$> many1 (wordLetter <|> blank)
+parseHeader = tokenizeBlock $ tokenize content
+  where content = (tokenize $ many1 (char '=')) >> (Header . MkText) <$> many1 (wordLetter <|> blank)
 
 removeRedundantSpaces :: [LightAtom] -> [LightAtom]
 removeRedundantSpaces [] = []
