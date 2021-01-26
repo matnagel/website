@@ -9,8 +9,6 @@ module MarkLight.Arguments
     parseQuotedString,
     parseBool,
     Parseable (..),
-    (<*>|),
-    (<$>|)
   )
 where
 
@@ -55,15 +53,17 @@ type ValueStorage = M.Map String Value
 data Argument a where
     FromKey :: Typeable a => String -> Parser a -> Argument a
     FromKeyDefault :: Typeable a => String -> Parser a -> a -> Argument a
-    FromFlag :: Typeable a => String -> (Bool -> a) -> Argument a
-    Application :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
-    Lift :: Typeable a => a -> Argument a
+    FromFlag :: String -> (Bool -> a) -> Argument a
+    Application :: Argument (a->b) -> Argument a -> Argument b
+    Lift :: a -> Argument a
 
-(<*>|) :: (Typeable a, Typeable b) => Argument (a->b) -> Argument a -> Argument b
-(<*>|) = Application
 
-(<$>|) :: (Typeable a, Typeable b) => (a->b) -> Argument a -> Argument b
-(<$>|) f a = (Lift f) <*>| a
+instance (Functor Argument) where
+    fmap f aa = Application (Lift f) aa
+
+instance (Applicative Argument) where
+    pure = Lift
+    (<*>) = Application
 
 
 keyValueParser :: Typeable a => String -> Parser a -> Parser (String, Value)
@@ -78,7 +78,7 @@ flagParser key = do
     tokenize $ try (string key)
     return $ (key, MkValue True)
 
-extractParserList :: Typeable a => Argument a -> [Parser (String, Value)]
+extractParserList :: Argument a -> [Parser (String, Value)]
 extractParserList (Lift _) = []
 extractParserList (FromKey key p) = [keyValueParser key p]
 extractParserList (FromFlag key _) = [flagParser key]

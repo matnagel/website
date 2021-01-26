@@ -99,21 +99,21 @@ data Person = MkPerson { firstname :: String, lastname :: String } deriving Show
 
 personArg :: Argument Person
 personArg = MkPerson
-    <$>| FromKey "fname" parseQuotedString
-    <*>| FromKey "lname" parseQuotedString
+    <$> FromKey "fname" parseQuotedString
+    <*> FromKey "lname" parseQuotedString
 
 personArgDefault :: Argument Person
 personArgDefault = MkPerson
-    <$>| FromKeyDefault "fname" parseQuotedString "Bill"
-    <*>| FromKey "lname" parseQuotedString
+    <$> FromKeyDefault "fname" parseQuotedString "Bill"
+    <*> FromKey "lname" parseQuotedString
 
 
 data Configuration = MkConfig { containsMenu :: Bool, isHome :: Bool } deriving Show
 
 configurationArg :: Argument Configuration
 configurationArg = MkConfig
-    <$>| FromFlag "containsMenu" id
-    <*>| FromKey "isHome" parseBool
+    <$> FromFlag "containsMenu" id
+    <*> FromKey "isHome" parseBool
 
 testArguments = TestLabel "Tests argument" $
     TestList

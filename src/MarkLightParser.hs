@@ -89,27 +89,27 @@ tokenizeBlock p = p <* spaces
 
 pageInformationArg :: Argument PageInformation
 pageInformationArg = MkPageInformation
-    <$>| FromKey "title" (stdParser)
-    <*>| FromKey "path" (stdParser)
-    <*>| FromFlag "addMenu" (MkIncMenuFlag)
-    <*>| FromFlag "registerMenu" (MkRegisterMenuEntryFlag)
+    <$> FromKey "title" (stdParser)
+    <*> FromKey "path" (stdParser)
+    <*> FromFlag "addMenu" (MkIncMenuFlag)
+    <*> FromFlag "registerMenu" (MkRegisterMenuEntryFlag)
 
 parsePageInformation :: Parser PageInformation
 parsePageInformation = parseCommand "page" pageInformationArg
 
 linkArg :: Argument LightAtom
 linkArg = Link
-    <$>| FromKey "path" (stdParser :: Parser URLPath)
-    <*>| FromKey "text" (stdParser :: Parser Text)
+    <$> FromKey "path" (stdParser :: Parser URLPath)
+    <*> FromKey "text" (stdParser :: Parser Text)
 
 parseLink :: Parser LightAtom
 parseLink = parseCommand "link" linkArg
 
 bookArg :: Argument LightAtom
 bookArg = Book
-    <$>| FromKey "title" stdParser
-    <*>| FromKey "author" stdParser
-    <*>| FromKeyDefault "link" (return <$> stdParser) Nothing
+    <$> FromKey "title" stdParser
+    <*> FromKey "author" stdParser
+    <*> FromKeyDefault "link" (return <$> stdParser) Nothing
 
 parseBook :: Parser LightAtom
 parseBook = parseCommand "book" bookArg
@@ -119,7 +119,7 @@ braced p = between (charToken '{') (charToken '}') p
 
 
 hflexArg :: Argument LightBlock
-hflexArg = HFlex <$>| (FromKey "content" $ parser)
+hflexArg = HFlex <$> (FromKey "content" $ parser)
     where parser = do
             hbs <- between (charToken '[') (charToken ']')
                 $ sepBy1 (braced $ mconcat <$> many1 parseBlock)
@@ -176,21 +176,21 @@ parsePreformated :: Parser LightBlock
 parsePreformated = braceCommand "pre" $ Preformated <$> manyTill anyChar (lookAhead $ char '}')
 
 publicationListArg :: Argument LightBlock
-publicationListArg = PublicationList <$>| FromKey "src" stdParser
+publicationListArg = PublicationList <$> FromKey "src" stdParser
 
 pictureArg :: Argument LightBlock
 pictureArg = Picture
-    <$>| FromKey "path" (MkURLPath <$> parseQuotedString)
-    <*>| FromKey "title" (MkTitle <$> parseQuotedString)
-    <*>| FromKey "size" stdParser
-    <*>| FromKey "style" (stdParser)
+    <$> FromKey "path" (MkURLPath <$> parseQuotedString)
+    <*> FromKey "title" (MkTitle <$> parseQuotedString)
+    <*> FromKey "size" stdParser
+    <*> FromKey "style" (stdParser)
 
 rightPictureArg :: Argument LightBlock
 rightPictureArg = RightPicture
-    <$>| (FromKey "content" $ mconcat <$> (braced $ many parseBlock))
-    <*>| FromKey "path" (MkURLPath <$> parseQuotedString)
-    <*>| FromKey "title" (MkTitle <$> parseQuotedString)
-    <*>| FromKey "size" stdParser
+    <$> (FromKey "content" $ mconcat <$> (braced $ many parseBlock))
+    <*> FromKey "path" (MkURLPath <$> parseQuotedString)
+    <*> FromKey "title" (MkTitle <$> parseQuotedString)
+    <*> FromKey "size" stdParser
 
 
 parseBlock :: Parser LightBlock
