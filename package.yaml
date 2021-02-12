@@ -27,6 +27,7 @@ dependencies:
 - HUnit
 - optics
 - filepath
+- directory
 - mtl
 
 

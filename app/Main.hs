@@ -19,7 +19,7 @@ import Types
 
 import Data.Time.Clock
 import System.FilePath
-
+import System.Directory
 
 outputFolder = "output/" :: FilePath
 
@@ -35,16 +35,15 @@ runMarkLight input = do
     let MkTargetPath output = (getPagePath . getPageMetadata) page
     writeResource (MkLocalPath (outputFolder </> output)) $ renderHtml html
 
-website :: (ReadLocal m, MonadFail m, HasMenu m, WriteLocal m) => m ()
-website  = do
-    runMarkLight "resources/marklight/teaching.mu"
-    runMarkLight "resources/marklight/publications.mu"
-    runMarkLight "resources/marklight/index.mu"
-    runMarkLight "resources/marklight/algtop.mu"
-    runMarkLight "resources/marklight/misc.mu"
-    runMarkLight "resources/marklight/geotop.mu"
+
+websiteFromPaths :: (ReadLocal m, MonadFail m, HasMenu m, WriteLocal m) => [LocalPath] -> m ()
+websiteFromPaths fs  = mapM runMarkLight fs >> return ()
+
+markLightFolder = "resources/marklight/"
 
 main :: IO ()
 main = do
-    env <- (computeEnvironment emptyEnvironment $ website)
-    execWithEnvironment env website
+    fs <- listDirectory markLightFolder
+    let files = MkLocalPath <$> (markLightFolder </>) <$> fs
+    env <- computeEnvironment emptyEnvironment $ websiteFromPaths $ files
+    execWithEnvironment env $ websiteFromPaths $ files
