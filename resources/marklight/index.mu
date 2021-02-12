@@ -6,7 +6,6 @@ matthias.nagel (at) math.ethz.ch
 
 Department of Mathematics
 ETH Zurich, Switzerland}
-I am a postdoc on the job market. Here is a {link path="https://people.math.ethz.ch/~managel/website/nagelCV.pdf" text="CV"}. 
 },
 {
 {picture path="https://people.math.ethz.ch/~managel/website/images/myself3.jpg" title="Photo of myself" size=height:27.0, style=nostyle}

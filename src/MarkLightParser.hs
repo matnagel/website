@@ -43,7 +43,6 @@ wordLetter :: Parser Char
 wordLetter = alphaNum <|> char '.' <|> char ':' <|> char '!'
     <|> char '/' <|> char '\''  <|> char '?' <|> char ',' <|> char ')' <|> char '(' <|> (notAtLineBegin >> char '-')
 
-
 blank :: Parser Char
 blank = char ' '
 
@@ -114,6 +113,16 @@ bookArg = Book
 parseBook :: Parser LightAtom
 parseBook = parseCommand "book" bookArg
 
+courseArg :: Argument LightAtom
+courseArg = LCourse
+    <$> FromKey "title" stdParser
+    <*> FromKey "desc" stdParser
+    <*> FromKey "platform" stdParser
+    <*> FromKeyDefault "link" (return <$> stdParser) Nothing
+
+parseCourse :: Parser LightAtom
+parseCourse = parseCommand "course" courseArg
+
 braced :: Parser a -> Parser a
 braced p = between (charToken '{') (charToken '}') p
 
@@ -141,7 +150,7 @@ removeRedundantSpaces (x:Space:y:xs) = x:Space:removeRedundantSpaces (y:xs)
 removeRedundantSpaces (x:xs) = x:removeRedundantSpaces xs
 
 parseAtom :: Parser LightAtom
-parseAtom = (parseLinebreak <|> parseWord <|> parseLink <|> parseBook)
+parseAtom = (parseLinebreak <|> parseWord <|> parseLink <|> parseBook <|> parseCourse)
 
 optionalSepBy :: Parser a -> Parser a -> Parser [a]
 optionalSepBy sep p = do
@@ -264,3 +273,5 @@ translateLightAtom Space = return $ HI.Space
 translateLightAtom Newline = return $ HI.Newline
 translateLightAtom (Book (MkTitle title) (MkAuthor author) Nothing) = [(HI.Em $ [HI.Text $ title]), (HI.Text $ " by " ++ author)]
 translateLightAtom (Book (MkTitle title) (MkAuthor author) (Just path)) = [(HI.Em $ [HI.Link path (MkText title)]), (HI.Text $ " by " ++ author)]
+translateLightAtom (LCourse (MkTitle title) (MkText desc) _ (Just path)) = [ (HI.Em $ [HI.Text $ title]), HI.Text $ " - " ++ desc, HI.Text ", ", HI.Link path $ MkText "certificate"]
+translateLightAtom (LCourse (MkTitle title) (MkText desc) _ Nothing) = [ (HI.Em $ [HI.Text $ title]), HI.Text $ " - " ++ desc]

@@ -10,6 +10,7 @@ module MarkLight.Types
     FlagIncludesMenu(..),
     FlagRegisterMenuEntry(..),
     Style (..),
+    Platform (..)
   )
 where
 
@@ -20,12 +21,15 @@ newtype FlagRegisterMenuEntry = MkRegisterMenuEntryFlag Bool deriving (Eq, Show)
 
 data Style = NoStyle | StyleCentered | StyleRight deriving (Eq, Show)
 
+data Platform = Coursera | EDX deriving (Eq, Show)
+
 data LightAtom
   = Word String
   | Newline
   | Space
   | Link URLPath Text
   | Book Title Author (Maybe URLPath)
+  | LCourse Title Text Platform (Maybe URLPath)
   deriving (Eq, Show)
 
 data LightBlock

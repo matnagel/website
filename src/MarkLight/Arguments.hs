@@ -175,3 +175,7 @@ instance Parseable Style where
 instance Parseable PictureSize where
     stdParser = (string "height:" >> MkSizeHeight <$> floating)
         <|> (string "width:" >> MkSizeWidth <$> floating)
+
+instance Parseable Platform where
+    stdParser = (string "Coursera" >> return Coursera)
+        <|> (string "edX" >> return EDX)
