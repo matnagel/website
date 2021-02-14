@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, StandaloneDeriving #-}
 
 module MarkLight.Types
   (
@@ -9,28 +9,26 @@ module MarkLight.Types
     Page (..),
     FlagIncludesMenu(..),
     FlagRegisterMenuEntry(..),
-    Style (..),
-    Platform (..)
+    Style (..)
   )
 where
 
 import Types
+import HtmlInterface
 
 newtype FlagIncludesMenu = MkIncMenuFlag Bool deriving (Eq, Show)
 newtype FlagRegisterMenuEntry = MkRegisterMenuEntryFlag Bool deriving (Eq, Show)
 
 data Style = NoStyle | StyleCentered | StyleRight deriving (Eq, Show)
 
-data Platform = Coursera | EDX deriving (Eq, Show)
+data LightAtom where
+  Word :: String -> LightAtom
+  Newline :: LightAtom
+  Space :: LightAtom
+  Link :: URLPath -> Text -> LightAtom
+  AtomDomain :: (ToCoreInlineElements a, Show a) =>  a -> LightAtom
 
-data LightAtom
-  = Word String
-  | Newline
-  | Space
-  | Link URLPath Text
-  | Book Title Author (Maybe URLPath)
-  | LCourse Title Text Platform (Maybe URLPath)
-  deriving (Eq, Show)
+deriving instance Show LightAtom
 
 data LightBlock
   = Plain [LightBlock]
@@ -44,7 +42,7 @@ data LightBlock
   | PublicationList LocalPath
   | RightPicture LightBlock URLPath Title PictureSize
   | Comment
-  deriving (Eq, Show)
+  deriving Show
 
 instance Semigroup LightBlock where
   (<>) (Plain a) (Plain b) = Plain (a <> b)

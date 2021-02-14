@@ -15,6 +15,7 @@ HasMenu(..),
 CoreInlineElement (..),
 CoreHtml (..),
 CoreInline,
+ToCoreInlineElements (..),
 compileHtml,
 setStyle,
 setClass
@@ -69,6 +70,9 @@ data CoreHtml = Monoid [CoreHtml]
     | Picture CSS URLPath Title PictureSize
     | HFlex CSS [CoreHtml]
     | Lift Html
+
+class ToCoreInlineElements a where
+    toCoreInlineElements :: a -> [CoreInlineElement]
 
 compileInline :: CoreInline -> Html
 compileInline cin = mconcat $ compileInlineElement <$> cin

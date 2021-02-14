@@ -5,6 +5,7 @@ module MarkLight.Arguments
   (
     quote,
     Argument (..),
+    Argumentable (..),
     parseArg,
     parseQuotedString,
     parseBool,
@@ -57,6 +58,8 @@ data Argument a where
     Application :: Argument (a->b) -> Argument a -> Argument b
     Lift :: a -> Argument a
 
+class Argumentable a where
+    stdArgument :: Argument a
 
 instance (Functor Argument) where
     fmap f aa = Application (Lift f) aa
@@ -64,7 +67,6 @@ instance (Functor Argument) where
 instance (Applicative Argument) where
     pure = Lift
     (<*>) = Application
-
 
 keyValueParser :: Typeable a => String -> Parser a -> Parser (String, Value)
 keyValueParser key p = do
@@ -175,7 +177,3 @@ instance Parseable Style where
 instance Parseable PictureSize where
     stdParser = (string "height:" >> MkSizeHeight <$> floating)
         <|> (string "width:" >> MkSizeWidth <$> floating)
-
-instance Parseable Platform where
-    stdParser = (string "Coursera" >> return Coursera)
-        <|> (string "edX" >> return EDX)

@@ -22,7 +22,7 @@ import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec.String
 import qualified HtmlInterface as HI
-import HtmlInterface (HasMenu(..))
+import HtmlInterface (HasMenu(..), ToCoreInlineElements(..))
 import qualified BibliographyGenerator as BG
 import Prelude hiding (div, head)
 
@@ -32,6 +32,7 @@ import Data.Typeable
 import MarkLight.Arguments
 import Types
 import MarkLight.Types
+import Domain
 
 notAtLineBegin :: Parser ()
 notAtLineBegin = do
@@ -104,28 +105,14 @@ linkArg = Link
 parseLink :: Parser LightAtom
 parseLink = parseCommand "link" linkArg
 
-bookArg :: Argument LightAtom
-bookArg = Book
-    <$> FromKey "title" stdParser
-    <*> FromKey "author" stdParser
-    <*> FromKeyDefault "link" (return <$> stdParser) Nothing
-
 parseBook :: Parser LightAtom
-parseBook = parseCommand "book" bookArg
-
-courseArg :: Argument LightAtom
-courseArg = LCourse
-    <$> FromKey "title" stdParser
-    <*> FromKey "desc" stdParser
-    <*> FromKey "platform" stdParser
-    <*> FromKeyDefault "link" (return <$> stdParser) Nothing
+parseBook = parseCommand "book" $ AtomDomain <$> (stdArgument :: Argument Book)
 
 parseCourse :: Parser LightAtom
-parseCourse = parseCommand "course" courseArg
+parseCourse = parseCommand "course" $ AtomDomain <$> (stdArgument :: Argument Course)
 
 braced :: Parser a -> Parser a
 braced p = between (charToken '{') (charToken '}') p
-
 
 hflexArg :: Argument LightBlock
 hflexArg = HFlex <$> (FromKey "content" $ parser)
@@ -271,7 +258,4 @@ translateLightAtom (Word str) = return $ HI.Text str
 translateLightAtom (Link path txt) = return $ HI.Link path txt
 translateLightAtom Space = return $ HI.Space
 translateLightAtom Newline = return $ HI.Newline
-translateLightAtom (Book (MkTitle title) (MkAuthor author) Nothing) = [(HI.Em $ [HI.Text $ title]), (HI.Text $ " by " ++ author)]
-translateLightAtom (Book (MkTitle title) (MkAuthor author) (Just path)) = [(HI.Em $ [HI.Link path (MkText title)]), (HI.Text $ " by " ++ author)]
-translateLightAtom (LCourse (MkTitle title) (MkText desc) _ (Just path)) = [ (HI.Em $ [HI.Text $ title]), HI.Text $ " - " ++ desc, HI.Text ", ", HI.Link path $ MkText "certificate"]
-translateLightAtom (LCourse (MkTitle title) (MkText desc) _ Nothing) = [ (HI.Em $ [HI.Text $ title]), HI.Text $ " - " ++ desc]
+translateLightAtom (AtomDomain a) = toCoreInlineElements a
