@@ -8,3 +8,4 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 ENV LANG en_US.UTF-8
 COPY stack.yaml package.yaml /stack/
 RUN mkdir app src test && stack build --only-dependencies
+RUN ln -s /stack/.stack-work /workspace
