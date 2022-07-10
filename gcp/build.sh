@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-ln -s /stack/.stack-work .
+ls -a /stack
 stack test
