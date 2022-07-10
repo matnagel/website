@@ -15,4 +15,4 @@ steps:
           entrypoint: sh
           args:
           - -c
-          - ls -a /
+          - pwd
