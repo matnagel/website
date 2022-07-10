@@ -9,6 +9,7 @@ steps:
           - --dockerfile=gcp/Dockerfile
           - --destination=eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME
           - --cache=true
+          - --compressed-caching=false
 
         - id: 'run tests'
           name: 'eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME'
