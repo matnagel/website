@@ -13,7 +13,7 @@ steps:
         - id: 'copy resources'
           name: 'google/cloud-sdk:381.0.0'
           entrypoint: 'make'
-          args: ['-f', 'gcp/targets.mk', 'resource']
+          args: ['-f', 'gcp/targets.mk', 'resources']
           env:
           - RESOURCE_BUCKET=${_RESOURCE_BUCKET}
 
