@@ -18,8 +18,8 @@ steps:
           - RESOURCE_BUCKET=${_RESOURCE_BUCKET}
 
 
-        - id: 'run tests'
+        - id: 'run test and build'
           name: 'eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME'
           entrypoint: 'make'
-          args: ['-f', 'gcp/targets.mk', 'test', 'output']
+          args: ['-f', 'gcp/targets.mk', 'test', 'build']
 

@@ -1,22 +1,21 @@
-.PHONY: test output check-env
+.PHONY: test build check-env
 
 test:
 	stack test
 
-output: output/index.html
+build: output/index.html
 
-resource: check-env
-	mkdir resource
-	gsutil -q cp -r gs://${RESOURCE_BUCKET}/ resource
-	ls -a
-	ls -a resource
-
-output/index.html: | resource
-	mkdir output
-	stack exec webpage
-
-check-env:
+resources:
 ifndef RESOURCE_BUCKET
 	$(error RESOURCE_BUCKET is undefined)
 endif
+	mkdir resources
+	gsutil -q cp -r gs://${RESOURCE_BUCKET}/ resources
+	ls -a
+	ls -a resources
 
+output: 
+	mkdir output
+
+output/index.html: | output resources
+	stack exec website
