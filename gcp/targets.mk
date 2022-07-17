@@ -6,8 +6,8 @@ test:
 output: output/index.html
 
 resource: check-env
+	mkdir resource
 	gsutil -q cp -r gs://${RESOURCE_BUCKET}/ resource
-	ls -a resource
 
 output/index.html: resource
 	mkdir output
