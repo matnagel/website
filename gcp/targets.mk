@@ -10,7 +10,8 @@ ifndef RESOURCE_BUCKET
 	$(error RESOURCE_BUCKET is undefined)
 endif
 	mkdir resources
-	gsutil -q cp -r gs://${RESOURCE_BUCKET}/ resources
+	gsutil -q cp -r gs://${RESOURCE_BUCKET}/marklight resources
+	gsutil -q cp -r gs://${RESOURCE_BUCKET}/json resources
 	ls -a
 	ls -a resources
 
