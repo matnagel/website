@@ -9,7 +9,7 @@ resource: check-env
 	mkdir resource
 	gsutil -q cp -r gs://${RESOURCE_BUCKET}/ resource
 
-output/index.html: resource
+output/index.html: | resource
 	mkdir output
 	stack exec webpage
 
