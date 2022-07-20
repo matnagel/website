@@ -1,11 +1,11 @@
-.PHONY: test build download
+.PHONY: test build
 
 test:
 	stack test
 
 build: output/index.html
 
-download: resources output
+upload: gcp/appEngine/contents
 
 resources:
 ifndef RESOURCE_BUCKET
@@ -15,7 +15,7 @@ endif
 	gsutil -q cp -r gs://${RESOURCE_BUCKET}/marklight resources
 	gsutil -q cp -r gs://${RESOURCE_BUCKET}/json resources
 
-output: 
+output:
 ifndef RESOURCE_BUCKET
 	$(error RESOURCE_BUCKET is undefined)
 endif
@@ -24,3 +24,7 @@ endif
 
 output/index.html: | output resources
 	stack exec website
+
+gcp/appEngine/contents: output/index.html
+	cp -r output/ gcp/appEngine/contents
+	ls -a gcp/appEngine/contents

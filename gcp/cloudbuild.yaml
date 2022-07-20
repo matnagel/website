@@ -1,25 +1,28 @@
-timeout: 30m
+timeout: 1800s
 options:
   logging: GCS_ONLY
 logsBucket: ${_BUILD_LOG_BUCKET}
 steps:
-        - id: 'generate build environment'
-          name: 'gcr.io/kaniko-project/executor:latest'
-          args:
-          - --dockerfile=gcp/Dockerfile
-          - --destination=eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME
-          - --cache=true
+  - id: "generate build environment"
+    name: "gcr.io/kaniko-project/executor:latest"
+    args:
+      - --dockerfile=gcp/Dockerfile
+      - --destination=eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME
+      - --cache=true
 
-        - id: 'copy resources'
-          name: 'google/cloud-sdk:381.0.0'
-          entrypoint: 'make'
-          args: ['-f', 'gcp/targets.mk', 'download']
-          env:
-          - RESOURCE_BUCKET=${_RESOURCE_BUCKET}
+  - id: "copy resources"
+    name: "google/cloud-sdk:381.0.0"
+    entrypoint: "make"
+    args: ["-f", "gcp/targets.mk", "download"]
+    env:
+      - RESOURCE_BUCKET=${_RESOURCE_BUCKET}
 
+  - id: "test and build"
+    name: "eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME"
+    entrypoint: "make"
+    args: ["-f", "gcp/targets.mk", "test", "build"]
 
-        - id: 'run test and build'
-          name: 'eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME'
-          entrypoint: 'make'
-          args: ['-f', 'gcp/targets.mk', 'test', 'build']
-
+  - id: "deploy"
+    name: "google/cloud-sdk:381.0.0"
+    entrypoint: "make"
+    args: ["-f", "gcp/targets.mk", "deploy"]
