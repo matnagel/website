@@ -1,9 +1,11 @@
-.PHONY: test build deploy
+.PHONY: test download build deploy
 
 test:
 	stack test
 
 build: output/index.html
+
+download: resources
 
 deploy: gcp/appEngine/contents
 
