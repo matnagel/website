@@ -7,7 +7,7 @@ build: gcp/appEngine/contents
 
 download: resources output
 
-deploy: gcp/appEngine/contents
+deploy: gcp/appEngine/appEngine_deployment.zip
 
 resources:
 ifndef RESOURCE_BUCKET
@@ -29,6 +29,8 @@ output/index.html: | output resources
 
 gcp/appEngine/contents: output/index.html
 	cp -r output/. gcp/appEngine/contents
+
+gcp/appEngine/appEngine_deployment.zip: gcp/appEngine/contents
 	find gcp/appEngine -exec touch -t 202204251730 {} +
 	cd gcp/appEngine; zip -o -r appEngine_deployment.zip .
 
