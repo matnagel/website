@@ -1,4 +1,4 @@
-.PHONY: test build
+.PHONY: test upload
 
 test:
 	stack test
