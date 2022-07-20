@@ -1,5 +1,5 @@
 FROM debian:stable
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -yq install locales haskell-stack \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -yq install zip locales haskell-stack \
 	&& stack upgrade --binary-only
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \

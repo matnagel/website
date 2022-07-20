@@ -3,7 +3,7 @@
 test:
 	stack test
 
-build: gcp/appEngine/contents
+build: gcp/appEngine/appEngine_deployment.zip
 
 download: resources output
 
