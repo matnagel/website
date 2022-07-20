@@ -1,11 +1,11 @@
-.PHONY: test upload
+.PHONY: test build deploy
 
 test:
 	stack test
 
 build: output/index.html
 
-upload: gcp/appEngine/contents
+deploy: gcp/appEngine/contents
 
 resources:
 ifndef RESOURCE_BUCKET
