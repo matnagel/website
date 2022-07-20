@@ -28,5 +28,5 @@ output/index.html: | output resources
 	stack exec website
 
 gcp/appEngine/contents: output/index.html
-	cp -r output/ gcp/appEngine/contents
+	cp -r output/. gcp/appEngine/contents
 	ls -a gcp/appEngine/contents
