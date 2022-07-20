@@ -3,9 +3,9 @@
 test:
 	stack test
 
-build: output/index.html
+build: gcp/appEngine/contents
 
-download: resources
+download: resources output
 
 deploy: gcp/appEngine/contents
 
