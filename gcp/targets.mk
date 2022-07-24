@@ -5,10 +5,26 @@ test:
 
 build: gcp/appEngine/appEngine_deployment.zip
 
-download: resources output
+download: resources output gcp/secrets/config/terraform-backend.conf gcp/secrets/config/terraform-custom.tvars
 
 deploy: gcp/appEngine/appEngine_deployment.zip
 
+secrets:
+	mkdir -p gcp/secrets
+
+gcp/secrets/config/terraform-backend.conf: | secrets
+ifndef CONFIG_BUCKET
+	$(error CONFIG_BUCKET is undefined)
+endif
+	gsutil -q cp gs://${CONFIG_BUCKET}/terraform/terraform-backend.conf gcp/secrets/config/terraform-backend.conf
+
+gcp/secrets/config/terraform-custom.tvars: | secrets
+ifndef CONFIG_BUCKET
+	$(error CONFIG_BUCKET is undefined)
+endif
+	gsutil -q cp gs://${CONFIG_BUCKET}/terraform/terraform-custom.tvars gcp/secrets/config/terraform-custom.tvars
+
+ 
 resources:
 ifndef RESOURCE_BUCKET
 	$(error RESOURCE_BUCKET is undefined)
