@@ -30,5 +30,5 @@ steps:
 
   - id: 'terraform'
     name: 'hashicorp/terraform:1.1.7'
-    entrypoint: "make"
-    args: ["-f", "gcp/targets.mk", "terraform"]
+    entrypoint: 'sh'
+    args: ['scripts/run-terraform.sh']
