@@ -1,11 +1,19 @@
-.PHONY: test download build deploy
+.PHONY: test download download_terraform terraform build deploy
 
 test:
 	stack test
 
 build: gcp/appEngine/appEngine_deployment.zip
 
-download: resources output gcp/secrets/config/terraform-backend.conf gcp/secrets/config/terraform-custom.tvars
+download: resources output download_terraform
+
+download_terraform: gcp/secrets/config/terraform-backend.conf gcp/secrets/config/terraform-custom.tvars
+
+terraform: download_terraform
+	cd gcp/terraform/env; 
+	terraform init -backend-config="../../secrets/config/terraform-backend.conf"
+	terraform plan -var-file="../../secrets/config/terraform-custom.tvars" -out deployment-plan
+
 
 deploy: gcp/appEngine/appEngine_deployment.zip
 
