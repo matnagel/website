@@ -38,7 +38,7 @@ ifndef RESOURCE_BUCKET
 	$(error RESOURCE_BUCKET is undefined)
 endif
 	mkdir output
-	gsutil -q cp -r gs://${RESOURCE_BUCKET}/static/. output
+	gsutil -q rsync -r gs://${RESOURCE_BUCKET}/static output
 
 output/index.html: | output resources
 	stack exec website
