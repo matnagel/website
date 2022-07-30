@@ -1,4 +1,8 @@
-from flask import Flask
+from flask import Flask, send_from_directory
+
+@app.route('/<path:path>')
+def send_report(path):
+    return send_from_directory('content', path)
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
