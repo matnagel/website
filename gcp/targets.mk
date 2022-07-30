@@ -48,5 +48,5 @@ gcp/appEngine/contents: output/index.html
 
 gcp/appEngine/app_engine_deployment.zip: | gcp/appEngine/contents
 	find gcp/appEngine -exec touch -t 202204251730 {} +
-	cd gcp/appEngine; zip -o -r app_engine_deployment.zip .
+	cd gcp/appEngine; zip -o -r --no-dir-entries app_engine_deployment.zip .
 
