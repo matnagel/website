@@ -41,10 +41,6 @@ resource "google_app_engine_standard_app_version" "website-app" {
     }
   }
 
-  env_variables = {
-    port = "8080"
-  }
-
   basic_scaling {
     max_instances = 2
   }
