@@ -28,7 +28,7 @@ resource "google_storage_bucket" "deployment-bucket" {
 
 resource "google_app_engine_standard_app_version" "website-app" {
   version_id = random_string.zip_id.result
-  service    = "website"
+  service    = "default"
   runtime    = "python310"
 
   entrypoint {
