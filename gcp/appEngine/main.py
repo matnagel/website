@@ -2,8 +2,12 @@ from flask import Flask, send_from_directory
 
 app = Flask(__name__)
 
+@app.route("/")
+def index():
+    return send_from_directory("content", "index.html")
+
 @app.route('/<path:path>')
-def send_report(path):
+def get_content(path):
     return send_from_directory('content', path)
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
