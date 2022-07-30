@@ -1,13 +1,13 @@
 from flask import Flask, send_from_directory
 
+app = Flask(__name__)
+
 @app.route('/<path:path>')
 def send_report(path):
     return send_from_directory('content', path)
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
-
-app = Flask(__name__)
 
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
