@@ -49,3 +49,8 @@ resource "google_app_engine_standard_app_version" "website-app" {
     max_instances = 2
   }
 }
+
+resource "google_app_engine_application" "app-engine" {
+  project     = var.project
+  location_id = var.region
+}
