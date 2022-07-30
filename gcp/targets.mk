@@ -1,4 +1,4 @@
-.PHONY: test download download_terraform terraform build deploy
+.PHONY: test download download_terraform terraform build
 
 test:
 	stack test
@@ -43,10 +43,10 @@ endif
 output/index.html: | output resources
 	stack exec website
 
-gcp/appEngine/contents: output/index.html
-	cp -r output/. gcp/appEngine/contents
+gcp/appEngine/static: output/index.html
+	cp -r output/. gcp/appEngine/static
 
-gcp/appEngine/app_engine_deployment.zip: | gcp/appEngine/contents
+gcp/appEngine/app_engine_deployment.zip: | gcp/appEngine/static
 	find gcp/appEngine -exec touch -t 202204251730 {} +
 	cd gcp/appEngine; zip -o -r --no-dir-entries app_engine_deployment.zip .
 
