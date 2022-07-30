@@ -43,10 +43,10 @@ endif
 output/index.html: | output resources
 	stack exec website
 
-gcp/appEngine/static: output/index.html
-	cp -r output/. gcp/appEngine/static
+gcp/appEngine/content: output/index.html
+	cp -r output/. gcp/appEngine/content
 
-gcp/appEngine/app_engine_deployment.zip: | gcp/appEngine/static
+gcp/appEngine/app_engine_deployment.zip: | gcp/appEngine/content
 	find gcp/appEngine -exec touch -t 202204251730 {} +
 	cd gcp/appEngine; zip -o -r --no-dir-entries app_engine_deployment.zip .
 
