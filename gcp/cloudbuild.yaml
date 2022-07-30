@@ -23,11 +23,6 @@ steps:
     entrypoint: "make"
     args: ["-f", "gcp/targets.mk", "test", "build"]
 
-  - id: "deploy"
-    name: "google/cloud-sdk:381.0.0"
-    entrypoint: "make"
-    args: ["-f", "gcp/targets.mk", "deploy"]
-
   - id: 'terraform'
     name: 'hashicorp/terraform:1.1.7'
     entrypoint: 'sh'
