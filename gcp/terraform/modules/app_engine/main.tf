@@ -25,3 +25,27 @@ resource "google_storage_bucket" "deployment-bucket" {
     enabled = true
   }
 }
+
+resource "google_app_engine_standard_app_version" "website-app" {
+  version_id = random_string.zip_id.result
+  service    = "website"
+  runtime    = "python310"
+
+  entrypoint {
+    shell = "python3 ./main.py"
+  }
+
+  deployment {
+    zip {
+      source_url = "https://storage.googleapis.com/${google_storage_bucket.deployment-bucket.name}/${google_storage_bucket_object.deployment-zip.name}"
+    }
+  }
+
+  env_variables = {
+    port = "8080"
+  }
+
+  basic_scaling {
+    max_instances = 2
+  }
+}
