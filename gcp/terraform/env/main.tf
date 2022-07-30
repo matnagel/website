@@ -4,7 +4,7 @@ provider "google" {
 }
 
 module "website" {
-  source  = "../modules/website"
+  source  = "../modules/app_engine"
   project = var.project
   region  = var.region
 }
