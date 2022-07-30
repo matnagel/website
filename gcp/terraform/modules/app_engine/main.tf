@@ -1,5 +1,5 @@
 locals {
-	deployment_zip = "../../appEngine/app_engine_deployment.zip"
+	deploy_zip = "../../appEngine/app_engine_deployment.zip"
 }
 
 resource "random_string" "zip_id" {
