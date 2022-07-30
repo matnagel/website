@@ -57,6 +57,7 @@ resource "google_app_engine_application" "app-engine" {
 
 resource "google_app_engine_service_split_traffic" "website-traffic" {
   service         = google_app_engine_standard_app_version.website-app.service
+  migrate_traffic = false
   split {
     shard_by = "IP"
     allocations = {
