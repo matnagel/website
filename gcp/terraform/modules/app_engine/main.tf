@@ -32,7 +32,7 @@ resource "google_app_engine_standard_app_version" "website-app" {
   runtime    = "python310"
 
   entrypoint {
-    shell = "python3 ./main.py"
+    shell = "gunicorn -b :$PORT -w 4 main:app"
   }
 
   deployment {
