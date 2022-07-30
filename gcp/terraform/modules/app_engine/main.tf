@@ -44,8 +44,7 @@ resource "google_app_engine_standard_app_version" "website-app" {
   basic_scaling {
     max_instances = 2
   }
-
-  noop_on_destroy = true
+  delete_service_on_destroy = true
 }
 
 resource "google_app_engine_application" "app-engine" {
