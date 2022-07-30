@@ -21,5 +21,7 @@ resource "google_storage_bucket" "deployment-bucket" {
   name                        = "${var.project}-deployment"
   location                    = var.region
   uniform_bucket_level_access = true
-  versioning                  = true
+  versioning = {
+    enabled = true
+  }
 }
