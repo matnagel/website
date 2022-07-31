@@ -42,3 +42,8 @@ moved {
   from = google_storage_bucket.deployment-bucket
   to   = google_storage_bucket.deployment_bucket
 }
+
+moved {
+  from = google_app_engine_standard_app_version.website-app
+  to = module.app_version.google_app_engine_standard_app_version.website_app
+}
