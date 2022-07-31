@@ -6,6 +6,10 @@ app = Flask(__name__)
 def index():
     return send_from_directory("content", "index.html")
 
+@app.route("/cert")
+def index():
+    return send_from_directory("content", "cert.html")
+
 @app.route('/<path:path>')
 def get_content(path):
     return send_from_directory('content', path)
