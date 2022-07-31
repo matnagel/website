@@ -9,8 +9,8 @@ resource "random_string" "zip_id" {
 
 resource "google_storage_bucket_object" "deployment_zip" {
   name   = "${random_string.zip_id.result}_app_engine_deployment.zip"
-  bucket = var.deployment-bucket
-  source = var.deployment-zip
+  bucket = var.deployment_bucket
+  source = var.deployment_zip
 }
 
 resource "google_app_engine_standard_app_version" "website_app" {
@@ -50,5 +50,5 @@ output "version" {
 }
 
 output "service" {
-  value = google_app_engine_standard_app_version.website-app.service
+  value = google_app_engine_standard_app_version.website_app.service
 }
