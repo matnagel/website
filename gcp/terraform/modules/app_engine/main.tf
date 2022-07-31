@@ -14,6 +14,9 @@ resource "google_storage_bucket" "deployment_bucket" {
 resource "google_app_engine_application" "app_engine" {
   project     = var.project
   location_id = var.region
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_app_engine_service_split_traffic" "website_traffic" {
@@ -45,5 +48,5 @@ moved {
 
 moved {
   from = google_app_engine_standard_app_version.website-app
-  to = module.app_version.google_app_engine_standard_app_version.website_app
+  to   = module.app_version.google_app_engine_standard_app_version.website_app
 }
