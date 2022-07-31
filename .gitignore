@@ -1,0 +1,5 @@
+.stack-work/
+output/
+gcp/secrets/
+.terraform
+*.cabal
