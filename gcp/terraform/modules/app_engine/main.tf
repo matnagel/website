@@ -19,22 +19,11 @@ resource "google_app_engine_application" "app_engine" {
   }
 }
 
-resource "google_app_engine_service_split_traffic" "website_traffic" {
-  service         = module.app_version.service
-  migrate_traffic = false
-  split {
-    shard_by = "IP"
-    allocations = {
-      (module.app_version.version) = 1
-    }
-  }
-}
-
 module "app_version" {
   source            = "./app_version"
   deployment_bucket = google_storage_bucket.deployment_bucket.name
   deployment_zip    = local.deploy_zip
-  project = var.project
+  project           = var.project
 }
 
 moved {
