@@ -32,15 +32,21 @@
     "Title":    "Stably slice disks of links",
     "Date":     "2019",
     "Arxiv":    "1901.01393",
-    "Note": "accepted in J. Topol."
+    "Journal":	{
+				"Name": "J. Topol.",
+				"Volume": "13.3 (2020): 1261-1301"
+		}
     },
 
     {
     "Coauthors":   ["C. Davis", "P. Orson", "M. Powell"],
     "Title":    "Triple linking numbers and surface systems",
     "Date":     "2017",
-    "Arxiv":    "1709.08478",
-    "Note": "accepted in Indiana Univ. Math. J."
+    "Journal":	{
+				"Name": "Indiana Univ. Math. J.",
+				"Volume": "69.7 (2020): 2505-2547"
+		},
+    "Arxiv":    "1709.08478"
     },
 
     {
@@ -69,8 +75,11 @@
 	"Coauthors":	["A. Conway", "E. Toffoli"],
 	"Title":	"Multivariable signatures, genus bounds and 0.5-solvable cobordisms",
 	"Date":		"2018",
-	"Note": "accepted in Mich. Math. J.",
-	"Arxiv":	"1703.07540"
+	"Arxiv":	"1703.07540",
+	"Journal": {
+			"Name": "Michigan Math. J.",
+			"Volume": "69.2 (2020): 381-427"
+	           }
 	},
 
 	{

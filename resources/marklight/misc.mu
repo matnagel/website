@@ -1,10 +1,5 @@
 {page title="Misc" path="misc.html", addMenu, registerMenu}
 
-=== Seminars
-
-{link path="https://math.ethz.ch/news-and-events/events/research-seminars.html" 
-	text="Seminars at ETH"}
-
 = GDPR
 
 This website is static, and does not collect or process personal information. Nevertheless, it is hosted on {link path="https://pages.github.com/" text="Github pages"}. Github might collect and process further information your browser shares, which likely includes your IP address. Please consult their {link path="https://help.github.com/en/github/site-policy/github-privacy-statement" text="privacy statement"} for more information.
