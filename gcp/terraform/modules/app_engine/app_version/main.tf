@@ -3,14 +3,14 @@ resource "random_string" "zip_id" {
   special = false
   upper   = false
   keepers = {
-    sha256 = filesha256(var.deploy_zip)
+    sha256 = filesha256(var.deployment_zip)
   }
 }
 
 resource "google_storage_bucket_object" "deployment_zip" {
   name   = "${random_string.zip_id.result}_app_engine_deployment.zip"
   bucket = var.deployment-bucket
-  source = var.deploy-zip
+  source = var.deployment-zip
 }
 
 resource "google_app_engine_standard_app_version" "website_app" {

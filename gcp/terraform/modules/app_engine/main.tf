@@ -17,12 +17,12 @@ resource "google_app_engine_application" "app_engine" {
 }
 
 resource "google_app_engine_service_split_traffic" "website_traffic" {
-  service         = app_version.service
+  service         = module.app_version.service
   migrate_traffic = false
   split {
     shard_by = "IP"
     allocations = {
-      (app_version.version) = 1
+      (module.app_version.version) = 1
     }
   }
 }
