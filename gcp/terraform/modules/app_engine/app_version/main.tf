@@ -17,6 +17,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
   version_id = "v-${random_string.zip_id.result}"
   service    = "default"
   runtime    = "python310"
+  project = var.project
 
   entrypoint {
     shell = "gunicorn -b :$PORT -w 4 main:app"

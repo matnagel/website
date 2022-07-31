@@ -5,3 +5,7 @@ variable "deployment_bucket" {
 variable "deployment_zip" {
   type = string
 }
+
+variable "project" {
+  type = string
+}
