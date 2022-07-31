@@ -7,7 +7,7 @@ def index():
     return send_from_directory("content", "index.html")
 
 @app.route("/cert")
-def index():
+def cert():
     return send_from_directory("content", "cert.html")
 
 @app.route('/<path:path>')
