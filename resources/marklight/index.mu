@@ -7,7 +7,7 @@ as a Data Engineer.
 You can still find some of my past research and teaching here.
 },
 {
-{picture path="https://people.math.ethz.ch/~managel/website/images/myself3.jpg" title="Photo of myself" size=height:27.0, style=nostyle}
+{picture path="images/myself3.jpg" title="Photo of myself" size=height:27.0, style=nostyle}
 }
 ]}
 

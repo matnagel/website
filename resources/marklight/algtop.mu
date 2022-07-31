@@ -1,21 +1,21 @@
 {page path="algtop.html", title="M731 Algebraic Topology"}
 
-{picture path="https://people.math.ethz.ch/~managel/website/images/covering.jpg" title="A cover of the circle" size=height:40.0 style=right}
+{picture path="images/covering.jpg" title="A cover of the circle" size=height:40.0 style=right}
 
 = Final exam
 
 The final exam is a take-home exam. It will be distributed Wednesday, December 6 - 10:00 at my office M414 and is due on Friday, December 8 - 10:00. It has to be returned to me before the deadline passes at M414.
 
-{link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Finalexam.pdf" text="Final exam"}
+{link path="pdf/math731/Finalexam.pdf" text="Final exam"}
 
 = Homework
 
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Homework1.pdf" text="Homework 1"}
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Homework2.pdf" text="Homework 2"}
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Homework3.pdf" text="Homework 3"}
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Homework4.pdf" text="Homework 4"}
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Homework5.pdf" text="Homework 5"}
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Homework6.pdf" text="Homework 6"}
+- {link path="pdf/math731/Homework1.pdf" text="Homework 1"}
+- {link path="pdf/math731/Homework2.pdf" text="Homework 2"}
+- {link path="pdf/math731/Homework3.pdf" text="Homework 3"}
+- {link path="pdf/math731/Homework4.pdf" text="Homework 4"}
+- {link path="pdf/math731/Homework5.pdf" text="Homework 5"}
+- {link path="pdf/math731/Homework6.pdf" text="Homework 6"}
 
 = Instructor
 Matthias Nagel<br>
@@ -29,7 +29,7 @@ HH410
 = Topics
 Topological spaces, CW complexes, fundamental groups, covering spaces, and homology
 
-{link path="https://people.math.ethz.ch/~managel/website/pdf/math731/Outline.pdf" text="Course outline"}
+{link path="pdf/math731/Outline.pdf" text="Course outline"}
 
 = Textbooks
 - {book title="Algebraic Topology" author="A. Hatcher" link="http://pi.math.cornell.edu/~hatcher/AT/ATpage.html"}

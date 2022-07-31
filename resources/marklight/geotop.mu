@@ -1,6 +1,6 @@
 {page path="geotop.html", title="Introduction to 3-manifolds"}
 
-{picture path="https://people.math.ethz.ch/~managel/website/images/braid.jpg" title="A braid" size=height:40.0 style=right}
+{picture path="images/braid.jpg" title="A braid" size=height:40.0 style=right}
 
 = Announcement
 
@@ -9,10 +9,10 @@ I will provide you with recorded lectures, which are complemented by zoom meetin
 
 = Homework
 
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework1.pdf" text="Homework 1"} 
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework2.pdf" text="Homework 2"}
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework3.pdf" text="Homework 3"}
-- {link path="https://people.math.ethz.ch/~managel/website/pdf/20geotop/homework4.pdf" text="Homework 4"}
+- {link path="pdf/20geotop/homework1.pdf" text="Homework 1"} 
+- {link path="pdf/20geotop/homework2.pdf" text="Homework 2"}
+- {link path="pdf/20geotop/homework3.pdf" text="Homework 3"}
+- {link path="pdf/20geotop/homework4.pdf" text="Homework 4"}
 
 = Textbooks
 
