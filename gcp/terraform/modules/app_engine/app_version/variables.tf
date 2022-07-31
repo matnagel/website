@@ -1,3 +1,7 @@
-variable "deployment_bucket" {}
+variable "deployment_bucket" {
+  type = string
+}
 
-variable "deployment_zip" {}
+variable "deployment_zip" {
+  type = string
+}

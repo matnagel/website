@@ -29,6 +29,6 @@ resource "google_app_engine_service_split_traffic" "website_traffic" {
 
 module "app_version" {
   source            = "./app_version"
-  deployment_bucket = google_storage_bucket.deployment_bucket
+  deployment_bucket = google_storage_bucket.deployment_bucket.name
   deployment_zip        = local.deploy_zip
 }

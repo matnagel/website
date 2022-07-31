@@ -24,7 +24,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
 
   deployment {
     zip {
-      source_url = "https://storage.googleapis.com/${var.deployment_bucket.name}/${var.deployment_zip.name}"
+      source_url = "https://storage.googleapis.com/${var.deployment_bucket}/${var.deployment_zip}"
     }
   }
 
