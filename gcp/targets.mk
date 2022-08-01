@@ -7,10 +7,10 @@ build: gcp/appEngine/app_engine_deployment.zip
 
 deploy: gcp/appEngine/app_engine_deployment.zip
 	mkdir -p gcp/deployments
-ifdef TAG_NAME
-	cp gcp/appEngine/app_engine_deployment.zip gcp/deployments/app_engine_deployment_${TAG_NAME}.zip
+ifndef VERSION
+	$(error VERSION is undefined)
 endif
-	cp gcp/appEngine/app_engine_deployment.zip gcp/deployments/app_engine_deployment_latest.zip
+	cp gcp/appEngine/app_engine_deployment.zip gcp/deployments/app_engine_deployment_${VERSION}.zip
 	gsutil rsync -c gcp/deployments gs://${DEPLOYMENT_BUCKET}/
 
 download: resources output download_terraform
