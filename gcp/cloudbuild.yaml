@@ -29,6 +29,7 @@ steps:
     args: ["-f", "gcp/targets.mk", "deploy"]
     env:
       - DEPLOYMENT_BUCKET=${_DEPLOYMENT_BUCKET}
+      - TAG_NAME=${TAG_NAME}
 
   - id: "terraform"
     name: "hashicorp/terraform:1.1.7"
