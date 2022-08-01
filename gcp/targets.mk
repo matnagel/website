@@ -1,9 +1,17 @@
-.PHONY: test download download_terraform terraform build
+.PHONY: test download download_terraform terraform build deploy
 
 test:
 	stack test
 
 build: gcp/appEngine/app_engine_deployment.zip
+
+deploy: gcp/appEngine/app_engine_deployment.zip
+	mkdir -p gcp/deployments
+ifdef TAG_NAME
+	cp gcp/appEngine/app_engine_deployment.zip gcp/deployments/app_engine_deployment_${TAG_NAME}.zip
+endif
+	cp gcp/appEngine/app_engine_deployment.zip gcp/deployments/app_engine_deployment_latest.zip
+	gsutil rsync -c gcp/deployments gs://${DEPLOYMENT_BUCKET}/
 
 download: resources output download_terraform
 
@@ -29,7 +37,7 @@ resources:
 ifndef RESOURCE_BUCKET
 	$(error RESOURCE_BUCKET is undefined)
 endif
-	mkdir resources
+	mkdir -p resources
 	gsutil -q cp -r gs://${RESOURCE_BUCKET}/marklight resources
 	gsutil -q cp -r gs://${RESOURCE_BUCKET}/json resources
 
@@ -37,7 +45,7 @@ output:
 ifndef RESOURCE_BUCKET
 	$(error RESOURCE_BUCKET is undefined)
 endif
-	mkdir output
+	mkdir -p output
 	gsutil -q rsync -r gs://${RESOURCE_BUCKET}/static output
 
 output/index.html: | output resources

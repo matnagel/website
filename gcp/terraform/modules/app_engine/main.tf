@@ -2,15 +2,6 @@ locals {
   deploy_zip = "../../appEngine/app_engine_deployment.zip"
 }
 
-resource "google_storage_bucket" "deployment_bucket" {
-  name                        = "${var.project}-deployment"
-  location                    = var.region
-  uniform_bucket_level_access = true
-  versioning {
-    enabled = true
-  }
-}
-
 resource "google_app_engine_application" "app_engine" {
   project     = var.project
   location_id = var.region

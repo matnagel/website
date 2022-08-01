@@ -22,8 +22,10 @@ steps:
     name: "eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME"
     entrypoint: "make"
     args: ["-f", "gcp/targets.mk", "test", "build"]
+    env:
+      - DEPLOYMENT_BUCKET=${_DEPLOYMENT_BUCKET}
 
-  - id: 'terraform'
-    name: 'hashicorp/terraform:1.1.7'
-    entrypoint: 'sh'
-    args: ['gcp/run-terraform.sh']
+  - id: "terraform"
+    name: "hashicorp/terraform:1.1.7"
+    entrypoint: "sh"
+    args: ["gcp/run-terraform.sh"]
