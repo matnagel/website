@@ -15,7 +15,11 @@ resource "google_app_engine_standard_app_version" "website_app" {
   }
 
   handlers {
-    security_level   = "SECURE_ALWAYS"
+    url_regex      = ".*"
+    security_level = "SECURE_ALWAYS"
+    script {
+      script_path = "auto"
+    }
   }
 
   basic_scaling {
