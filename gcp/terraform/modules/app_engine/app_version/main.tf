@@ -10,7 +10,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
 
   deployment {
     zip {
-      source_url = "https://storage.googleapis.com/${var.deployment_bucket}/${var.deployment_zip}"
+      source_url = "https://storage.googleapis.com/${var.deployment_bucket}/builds/${var.deployment_zip}"
     }
   }
 
