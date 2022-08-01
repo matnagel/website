@@ -27,6 +27,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
   handlers {
     url_regex        = ".*"
     auth_fail_action = "AUTH_FAIL_ACTION_REDIRECT"
+    security_level   = "SECURE_OPTIONAL"
     login            = "LOGIN_OPTIONAL"
     script {
       script_path = "auto"
