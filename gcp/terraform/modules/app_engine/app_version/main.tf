@@ -23,7 +23,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
   }
 
   basic_scaling {
-    max_instances = 2
+    max_instances = 1
   }
 
   lifecycle {
