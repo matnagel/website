@@ -5,6 +5,7 @@ provider "google" {
 
 module "website" {
   source  = "../modules/app_engine"
+  deployment_bucket = var.deployment_bucket
   project = var.project
   region  = var.region
 }

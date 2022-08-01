@@ -9,3 +9,8 @@ variable "zone" {
 variable "region" {
   type = string
 }
+
+variable "deployment_bucket" {
+  type = string
+}
+
