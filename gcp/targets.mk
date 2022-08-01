@@ -11,7 +11,7 @@ ifndef VERSION
 	$(error VERSION is undefined)
 endif
 	cp gcp/appEngine/app_engine_deployment.zip gcp/deployments/app_engine_deployment_${VERSION}.zip
-	gsutil rsync -c --no-times gcp/deployments gs://${DEPLOYMENT_BUCKET}/
+	gsutil rsync -c gcp/deployments gs://${DEPLOYMENT_BUCKET}/
 
 download: resources output download_terraform
 
