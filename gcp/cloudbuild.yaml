@@ -24,6 +24,7 @@ steps:
     args: ["-f", "gcp/targets.mk", "test", "build"]
     env:
       - DEPLOYMENT_BUCKET=${_DEPLOYMENT_BUCKET}
+      - TF_VAR_deployment_bucket=${_DEPLOYMENT_BUCKET}
 
   - id: "terraform"
     name: "hashicorp/terraform:1.1.7"

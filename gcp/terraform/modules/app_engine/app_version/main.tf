@@ -1,20 +1,5 @@
-resource "random_string" "zip_id" {
-  length  = 10
-  special = false
-  upper   = false
-  keepers = {
-    sha256 = filesha256(var.deployment_zip)
-  }
-}
-
-resource "google_storage_bucket_object" "deployment_zip" {
-  name   = "${random_string.zip_id.result}_app_engine_deployment.zip"
-  bucket = var.deployment_bucket
-  source = var.deployment_zip
-}
-
 resource "google_app_engine_standard_app_version" "website_app" {
-  version_id = "v-${random_string.zip_id.result}"
+  version_id = "v-latest"
   service    = "default"
   runtime    = "python310"
   project = var.project
@@ -25,7 +10,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
 
   deployment {
     zip {
-      source_url = "https://storage.googleapis.com/${var.deployment_bucket}/${google_storage_bucket_object.deployment_zip.name}"
+      source_url = "https://storage.googleapis.com/${var.deployment_bucket}/${var.deployment_zip}"
     }
   }
 
