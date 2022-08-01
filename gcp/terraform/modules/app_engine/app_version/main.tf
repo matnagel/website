@@ -2,7 +2,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
   version_id = "v-latest"
   service    = "default"
   runtime    = "python310"
-  project = var.project
+  project    = var.project
 
   entrypoint {
     shell = "gunicorn -b :$PORT -w 4 main:app"
@@ -15,8 +15,10 @@ resource "google_app_engine_standard_app_version" "website_app" {
   }
 
   handlers {
-    url_regex      = ".*"
-    security_level = "SECURE_ALWAYS"
+    url_regex        = ".*"
+    security_level   = "SECURE_ALWAYS"
+    auth_fail_action = "AUTH_FAIL_ACTION_REDIRECT"
+    login            = "LOGIN_OPTIONAL"
     script {
       script_path = "auto"
     }
