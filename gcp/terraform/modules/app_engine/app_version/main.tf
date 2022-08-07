@@ -30,7 +30,6 @@ resource "google_app_engine_standard_app_version" "website_app" {
 
   lifecycle {
     create_before_destroy = true
-    ignore_changes = [handlers]
   }
 }
 
