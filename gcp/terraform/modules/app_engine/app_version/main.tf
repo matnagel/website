@@ -26,6 +26,8 @@ resource "google_app_engine_standard_app_version" "website_app" {
     max_instances = 2
   }
 
+  instance_class = "B1"
+
   lifecycle {
     create_before_destroy = true
     ignore_changes = [handlers]
