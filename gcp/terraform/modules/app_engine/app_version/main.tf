@@ -1,3 +1,15 @@
+data "google_storage_bucket_object" "deployment_zip" {
+  name   = "builds/${var.deployment_zip}"
+  bucket = var.deployment_bucket
+}
+
+resource "random_string" "random" {
+  length     = 10
+  special    = false
+  keepers    = { blob_hash = data.google_storage_bucket_object.deployment_zip.md5hash }
+  depends_on = [data.google_storage_bucket_object.deployment_zip]
+}
+
 resource "google_app_engine_standard_app_version" "website_app" {
   version_id = "v-${var.app_version}"
   service    = "default"
@@ -15,8 +27,8 @@ resource "google_app_engine_standard_app_version" "website_app" {
   }
 
   handlers {
-    url_regex        = ".*"
-    security_level   = "SECURE_ALWAYS"
+    url_regex      = ".*"
+    security_level = "SECURE_ALWAYS"
     script {
       script_path = "auto"
     }
@@ -27,6 +39,12 @@ resource "google_app_engine_standard_app_version" "website_app" {
   }
 
   instance_class = "B1"
+
+  lifecycle {
+    replace_triggered_by = [
+      data.google_storage_bucket_object.deployment_zip.md5hash
+    ]
+  }
 }
 
 output "version" {
