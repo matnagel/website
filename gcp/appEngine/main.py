@@ -10,6 +10,10 @@ def index():
 def cert():
     return send_from_directory("content", "cert.html")
 
+@app.route("/hello/")
+def hello():
+    return "hello, world"
+
 @app.route('/<path:path>')
 def get_content(path):
     return send_from_directory('content', path)
