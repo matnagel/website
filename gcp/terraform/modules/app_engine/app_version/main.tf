@@ -1,5 +1,5 @@
 resource "google_app_engine_standard_app_version" "website_app" {
-  version_id = "v-latest"
+  version_id = "v-${var.app_version}"
   service    = "default"
   runtime    = "python310"
   project    = var.project

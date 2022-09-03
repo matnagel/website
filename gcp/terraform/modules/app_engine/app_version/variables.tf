@@ -9,3 +9,7 @@ variable "deployment_zip" {
 variable "project" {
   type = string
 }
+
+variable "app_version" {
+  type = string
+}

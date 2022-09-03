@@ -9,3 +9,7 @@ variable "region" {
 variable "deployment_bucket" {
   type = string
 }
+
+variable "versions" {
+  type = set(string)
+}
