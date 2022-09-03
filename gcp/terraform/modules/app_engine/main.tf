@@ -7,12 +7,23 @@ resource "google_app_engine_application" "app_engine" {
 }
 
 module "app_version" {
-  for_each = var.versions
+  for_each = var.all_versions
   source            = "./app_version"
   deployment_bucket = var.deployment_bucket
   deployment_zip    = "app_engine_deployment_${each.key}.zip"
   app_version       = each.key
   project           = var.project
+}
+
+resource "google_app_engine_service_split_traffic" "traffic" {
+  service         = module.app_version[var.current_version].service
+  migrate_traffic = false
+  split {
+    shard_by = "IP"
+    allocations = {
+      module.app_version[var.current_version].version = 1
+    }
+  }
 }
 
 moved {

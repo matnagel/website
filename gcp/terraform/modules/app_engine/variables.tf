@@ -10,6 +10,10 @@ variable "deployment_bucket" {
   type = string
 }
 
-variable "versions" {
+variable "all_versions" {
   type = set(string)
+}
+
+variable "current_version" {
+  type = string
 }

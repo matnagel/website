@@ -27,21 +27,6 @@ resource "google_app_engine_standard_app_version" "website_app" {
   }
 
   instance_class = "B1"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "google_app_engine_service_split_traffic" "traffic" {
-  service         = google_app_engine_standard_app_version.website_app.service
-  migrate_traffic = false
-  split {
-    shard_by = "IP"
-    allocations = {
-      (google_app_engine_standard_app_version.website_app.version_id) = 1
-    }
-  }
 }
 
 output "version" {
