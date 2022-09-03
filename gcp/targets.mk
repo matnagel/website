@@ -5,7 +5,7 @@ test:
 
 build: gcp/appEngine/app_engine_deployment.zip
 
-deploy: gcp/appEngine/app_engine_deployment.zip
+deliver: gcp/appEngine/app_engine_deployment.zip
 	mkdir -p gcp/deployments
 ifndef VERSION
 	$(error VERSION is undefined)

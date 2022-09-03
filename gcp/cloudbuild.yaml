@@ -24,10 +24,10 @@ steps:
     entrypoint: "make"
     args: ["-f", "gcp/targets.mk", "test", "build"]
 
-  - id: "deploy"
+  - id: "deliver"
     name: "google/cloud-sdk:381.0.0"
     entrypoint: "make"
-    args: ["-f", "gcp/targets.mk", "deploy"]
+    args: ["-f", "gcp/targets.mk", "deliver"]
     env:
       - DEPLOYMENT_BUCKET=${_DEPLOYMENT_BUCKET}
       - VERSION=${_VERSION}
