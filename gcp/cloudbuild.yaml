@@ -33,6 +33,6 @@ steps:
       - VERSION=${_VERSION}
 
   - id: "terraform"
-    name: "hashicorp/terraform:1.1.7"
+    name: "hashicorp/terraform:1.2.8"
     entrypoint: "sh"
     args: ["gcp/run-terraform.sh"]

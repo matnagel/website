@@ -3,7 +3,7 @@ data "google_storage_bucket_object" "deployment_zip" {
   bucket = var.deployment_bucket
 }
 
-resource "random_string" "random" {
+resource "random_string" "blob_change" {
   length     = 10
   special    = false
   keepers    = { blob_hash = data.google_storage_bucket_object.deployment_zip.md5hash }
@@ -42,7 +42,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
 
   lifecycle {
     replace_triggered_by = [
-      data.google_storage_bucket_object.deployment_zip.md5hash
+      resource.random_string.blob_change
     ]
     create_before_destroy = true
   }
