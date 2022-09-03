@@ -7,7 +7,7 @@ resource "google_app_engine_application" "app_engine" {
 }
 
 module "app_version" {
-  for_each = var.all_versions
+  for_each          = var.all_versions
   source            = "./app_version"
   deployment_bucket = var.deployment_bucket
   deployment_zip    = "app_engine_deployment_${each.key}.zip"
