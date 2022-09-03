@@ -9,5 +9,5 @@ module "website" {
   project = var.project
   region  = var.region
   all_versions = ["latest", "2209"]
-  current_version = "latest"
+  latest_version = "latest"
 }

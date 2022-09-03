@@ -3,15 +3,13 @@ data "google_storage_bucket_object" "deployment_zip" {
   bucket = var.deployment_bucket
 }
 
-resource "random_string" "blob_change" {
-  length     = 10
-  special    = false
-  keepers    = { blob_hash = data.google_storage_bucket_object.deployment_zip.md5hash }
-  depends_on = [data.google_storage_bucket_object.deployment_zip]
+resource "random_pet" "blob_change" {
+   length     = 2
+   keepers    = { blob_hash = data.google_storage_bucket_object.deployment_zip.md5hash }
 }
 
 resource "google_app_engine_standard_app_version" "website_app" {
-  version_id = "v-${var.app_version}"
+  version_id = "v-${var.app_version}-${random_pet.blob_change.id}"
   service    = "default"
   runtime    = "python310"
   project    = var.project
@@ -39,13 +37,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
   }
 
   instance_class = "B1"
-
-  lifecycle {
-    replace_triggered_by = [
-      resource.random_string.blob_change
-    ]
-    create_before_destroy = true
-  }
+  noop_on_destroy = true
 }
 
 output "version" {

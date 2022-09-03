@@ -14,6 +14,6 @@ variable "all_versions" {
   type = set(string)
 }
 
-variable "current_version" {
+variable "latest_version" {
   type = string
 }
