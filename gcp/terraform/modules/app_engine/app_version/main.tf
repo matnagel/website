@@ -44,6 +44,7 @@ resource "google_app_engine_standard_app_version" "website_app" {
     replace_triggered_by = [
       data.google_storage_bucket_object.deployment_zip.md5hash
     ]
+    create_before_destroy = true
   }
 }
 
