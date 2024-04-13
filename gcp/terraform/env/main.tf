@@ -8,6 +8,6 @@ module "website" {
   deployment_bucket = var.deployment_bucket
   project = var.project
   region  = var.region
-  all_versions = ["latest", "2209", "2311"]
-  latest_version = "2311"
+  all_versions = ["latest", "2209", "2311", "2404"]
+  latest_version = "2404"
 }
