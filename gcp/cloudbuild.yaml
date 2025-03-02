@@ -4,7 +4,7 @@ options:
 logsBucket: ${_BUILD_LOG_BUCKET}
 steps:
   - id: "generate build environment"
-    name: "gcr.io/kaniko-project/executor:v1.22.0"
+    name: "gcr.io/kaniko-project/executor:v1.23.2"
     args:
       - --dockerfile=gcp/Dockerfile
       - --destination=eu.gcr.io/$PROJECT_ID/$_IMAGE_NAME
@@ -13,7 +13,7 @@ steps:
       - --snapshot-mode=redo 
 
   - id: "Download resources"
-    name: "google/cloud-sdk:471.0.0"
+    name: "google/cloud-sdk:512.0.0"
     entrypoint: "make"
     args: ["-f", "gcp/targets.mk", "download"]
     env:
@@ -26,7 +26,7 @@ steps:
     args: ["-f", "gcp/targets.mk", "test", "build"]
 
   - id: "deliver"
-    name: "google/cloud-sdk:471.0.0"
+    name: "google/cloud-sdk:512.0.0"
     entrypoint: "make"
     args: ["-f", "gcp/targets.mk", "deliver"]
     env:
@@ -34,6 +34,6 @@ steps:
       - VERSION=${_VERSION}
 
   - id: "terraform"
-    name: "hashicorp/terraform:1.8"
+    name: "hashicorp/terraform:1.11"
     entrypoint: "sh"
     args: ["gcp/run-terraform.sh"]
